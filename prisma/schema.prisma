@@ -1,5 +1,5 @@
 // MedSafe Prisma schema — Supabase (hosted Postgres).
-// Tables are fleshed out in Piece 1 (Drug, Interaction seeded from DDInter 2.0).
+// Seeded from DDInter 2.0 (see /prisma/seed.ts and /prisma/data/*.csv).
 
 generator client {
   provider = "prisma-client-js"
@@ -10,9 +10,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Placeholder so the Prisma client can generate before Piece 1.
-// Piece 1 replaces this with the real Drug and Interaction models.
-model HealthCheck {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
+enum Severity {
+  Minor
+  Moderate
+  Major
+}
+
+model Drug {
+  id    Int     @id @default(autoincrement())
+  rxcui String?
+  name  String  @unique
+}
+
+model Interaction {
+  id          Int      @id @default(autoincrement())
+  drugAName   String
+  drugBName   String
+  severity    Severity
+  mechanism   String?
+  description String?
+
+  @@index([drugAName, drugBName])
 }

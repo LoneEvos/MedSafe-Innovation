@@ -27,7 +27,8 @@ never diagnosis. This is on every screen and in the pitch.
 - **Backend:** Next.js API routes (one repo, no separate server)
 - **Database:** Supabase (hosted Postgres) via Prisma — seeded from DDInter 2.0
 - **Drug name matching:** RxNorm REST API (free, live)
-- **AI:** a vision-capable LLM API (label reading + regimen reasoning) — use your hackathon credits
+- **AI:** Google Gemini (2.5 Flash) via `@google/generative-ai` — one multimodal model for both
+  label reading and regimen reasoning. Free tier from Google AI Studio; key in `GEMINI_API_KEY`.
 - **PDF:** react-pdf (client) or pdfkit (server)
 
 ---
@@ -67,7 +68,7 @@ Start every session by pointing Claude Code at `CLAUDE.md` (Piece 0). Do them in
 > - Next.js 14 (App Router) + TypeScript + Tailwind
 > - Prisma + Supabase Postgres (seeded from DDInter 2.0)
 > - RxNorm REST API for drug-name normalization
-> - Vision-capable LLM API for label reading + plain-language regimen reasoning
+> - Google Gemini (2.5 Flash) via @google/generative-ai for label reading + regimen reasoning
 >
 > ## Key conventions
 > - All backend logic lives in Next.js API routes under /app/api
@@ -135,7 +136,10 @@ interactions so you're unblocked.
 >    (e.g. combined drowsiness, serotonin/anticholinergic burden), duplicate drug classes, and timing
 >    conflicts. STRICT RULE in the prompt: it may only treat the provided DB hits as confirmed
 >    interactions and must frame everything else as general educational awareness, not new interaction
->    claims or diagnosis. Read the API key from an env var; graceful fallback text on failure.
+>    claims or diagnosis.
+>
+> Use Google Gemini (model `gemini-2.5-flash`) via the `@google/generative-ai` npm package. Read the
+> key from `GEMINI_API_KEY`. Add graceful fallback text if the API call fails.
 >
 > Wire both into `/api/check` so the response includes per-interaction `explanation` plus a
 > top-level `regimenSummary`.
@@ -156,10 +160,12 @@ interactions so you're unblocked.
 ## PIECE 6 — Photo label reading (core AI, not stretch)
 
 > Add an image-upload option beside the text input. On upload, POST the image to a new
-> `/api/scan` route that calls a vision-capable LLM (`/lib/vision.ts`) to extract medication
-> name(s) and dose from the label. Return the extracted names to the UI as editable chips for the
-> user to CONFIRM before checking — then feed them into the existing `/api/check` flow. Keep text
-> input as the default path; photo is an enhancement layered on top, never a replacement.
+> `/api/scan` route that calls Google Gemini (model `gemini-2.5-flash`) via the
+> `@google/generative-ai` npm package in `/lib/vision.ts` — pass the image inline and ask it to
+> extract medication name(s) and dose from the label. Reuse the same `GEMINI_API_KEY`. Return the
+> extracted names to the UI as editable chips for the user to CONFIRM before checking — then feed
+> them into the existing `/api/check` flow. Keep text input as the default path; photo is an
+> enhancement layered on top, never a replacement.
 
 ---
 
