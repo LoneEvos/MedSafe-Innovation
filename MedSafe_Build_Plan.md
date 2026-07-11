@@ -1,33 +1,49 @@
-# MedSafe — 28-Day Solo Build Plan (Claude Code / Cursor)
+# MedSafe — 28-Day Solo Build Plan (v2, Claude Code / Cursor)
 
-**What you're building:** A web app where a user enters their medications and gets back
-(1) dangerous drug–drug interactions with plain-language explanations, (2) a daily
-morning/noon/night schedule, and (3) a shareable PDF summary for their doctor.
+**Theme:** AI for Social Impact (also fits AI & Intelligent Systems).
+**Tags:** Health · ML/AI · Web.
 
-**Approach:** Text-first MVP. Photo/OCR is a stretch piece at the end.
+**What you're building:** A web app where a user enters their medications — by typing OR by
+photographing a pill-bottle label — and gets back:
+1. Dangerous drug–drug interactions, grounded in a real dataset, with plain-language explanations.
+2. A **whole-regimen risk summary** — AI reasoning over the *entire* med list (cumulative sedation,
+   duplicate drug classes, timing conflicts), not just isolated pairs.
+3. A daily morning/noon/night schedule.
+4. A shareable PDF summary for their doctor.
+
+**Why this version:** two of the six judging criteria are Innovation and Technical Excellence,
+and the judge is an AI Engineer. A plain "look up a pair in a table" app reads as a thin wrapper.
+So the AI does real work here — **vision label-reading** and **whole-regimen reasoning** — while
+the downloaded dataset keeps the hard interaction facts accurate. Text input stays as the
+always-works path so your live demo can never break.
+
 **Framing everywhere:** educational awareness tool, "always talk to your doctor/pharmacist" —
-never diagnosis. Put this disclaimer in the UI and the pitch.
+never diagnosis. This is on every screen and in the pitch.
 
 ---
 
 ## Locked-in stack
-- **Frontend:** Next.js (React) + Tailwind CSS
-- **Backend:** Next.js API routes (one codebase, no separate server)
+- **Frontend:** Next.js 14 (App Router) + TypeScript + Tailwind CSS
+- **Backend:** Next.js API routes (one repo, no separate server)
 - **Database:** Supabase (hosted Postgres) via Prisma — seeded from DDInter 2.0
 - **Drug name matching:** RxNorm REST API (free, live)
-- **Plain-language explanations:** an LLM API (use your hackathon credits)
-- **PDF:** client-side (react-pdf) or server-side (pdfkit)
+- **AI:** a vision-capable LLM API (label reading + regimen reasoning) — use your hackathon credits
+- **PDF:** react-pdf (client) or pdfkit (server)
 
-Why this stack: one repo, no DevOps, deploys to Vercel in minutes, and Supabase gives you a
-real hosted database (plus a dashboard to inspect your data, and free auth/storage if you later
-add accounts or photo upload). Free tier is plenty for a hackathon.
+---
+
+## The safety rule that keeps the AI honest
+The **database is the source of truth for interactions** — the LLM may never invent an interaction
+that isn't a DB hit. The LLM's job is two things only: (a) rephrase real DB hits in plain language,
+and (b) give *general educational context* about the overall regimen (e.g. "three of these can
+cause drowsiness — combined they may make you sleepier"), clearly labeled as awareness, not a
+diagnosis. This distinction is what makes it both innovative AND responsible — say it out loud in your demo.
 
 ---
 
 ## How to use this document
-Each **PIECE** below is one prompt. Paste it into Claude Code, let it finish, test it,
-commit, then move to the next. Do them in order — later pieces assume earlier ones exist.
-Start each new session by pointing Claude Code at `CLAUDE.md` (Piece 0).
+Each **PIECE** is one prompt. Paste into Claude Code, let it finish, test, commit, next.
+Start every session by pointing Claude Code at `CLAUDE.md` (Piece 0). Do them in order.
 
 ---
 
@@ -35,34 +51,35 @@ Start each new session by pointing Claude Code at `CLAUDE.md` (Piece 0).
 
 > Create a new Next.js 14 app (App Router) called `medsafe` with TypeScript, Tailwind CSS,
 > and Prisma configured for a Supabase Postgres database. Read the Postgres connection string
-> from a `DATABASE_URL` env var (I'll paste my Supabase connection string into `.env`). Set up a
-> clean folder structure: `/app` for routes, `/lib` for helpers, `/prisma` for schema. Add a
-> health-check API route at `/api/ping` that returns `{ ok: true }`. Create a `CLAUDE.md` file at
-> the repo root with exactly this content:
+> from a `DATABASE_URL` env var (I'll paste my Supabase string into `.env`). Folder structure:
+> `/app` routes, `/app/api` endpoints, `/lib` helpers, `/prisma` schema, `/components` UI.
+> Add a health-check route `/api/ping` returning `{ ok: true }`. Create `CLAUDE.md` at the repo
+> root with exactly this content:
 >
 > ```markdown
 > # MedSafe
 >
 > Educational web app that checks a user's medication list for drug–drug interactions,
-> builds a daily dosing schedule, and exports a PDF summary for their doctor.
+> reasons about whole-regimen risk, builds a daily schedule, and exports a PDF for their doctor.
 > NOT a diagnostic tool — every screen must remind users to consult a doctor/pharmacist.
 >
 > ## Tech stack
 > - Next.js 14 (App Router) + TypeScript + Tailwind
 > - Prisma + Supabase Postgres (seeded from DDInter 2.0)
 > - RxNorm REST API for drug-name normalization
-> - LLM API for plain-language interaction explanations
+> - Vision-capable LLM API for label reading + plain-language regimen reasoning
 >
 > ## Key conventions
 > - All backend logic lives in Next.js API routes under /app/api
-> - Reusable logic in /lib (rxnorm.ts, interactions.ts, llm.ts)
+> - Reusable logic in /lib (rxnorm.ts, interactions.ts, llm.ts, vision.ts)
 > - Drug names are always normalized to an RxCUI before any interaction lookup
-> - Never invent interaction data — only return what's in the seeded DB
+> - The DB is the ONLY source of interaction facts — the LLM never invents interactions
+> - LLM regimen reasoning is general educational context, always labeled "not medical advice"
 >
 > ## File structure
 > - /app         routes + pages
 > - /app/api     backend endpoints
-> - /lib         rxnorm, interactions, llm, pdf helpers
+> - /lib         rxnorm, interactions, llm, vision, pdf helpers
 > - /prisma      schema.prisma + seed.ts + ddinter CSV
 > - /components  React UI components
 > ```
@@ -71,118 +88,122 @@ Start each new session by pointing Claude Code at `CLAUDE.md` (Piece 0).
 
 ---
 
-## PIECE 1 — Database schema + DDInter seed
+## PIECE 1 — Supabase DB schema + DDInter seed
 
-**Before this piece:** (1) create a free Supabase project and copy its Postgres connection
-string into `.env` as `DATABASE_URL`. (2) download DDInter 2.0 CSV files (search "DDInter 2.0
-download"). Put the main interaction CSV in `/prisma/data/ddinter.csv`. If you can't get it fast,
-tell Claude Code to generate a 60-row sample CSV of well-known interactions so you're unblocked.
+**Before this piece:** (1) create a free Supabase project; copy its Postgres connection string
+into `.env` as `DATABASE_URL` (use the pooler URL, port 6543, for the app and the direct URL,
+port 5432, for migrations). (2) download DDInter 2.0 CSV (search "DDInter 2.0 download"); put it
+in `/prisma/data/ddinter.csv`. If blocked, have Claude Code generate a 60-row sample of well-known
+interactions so you're unblocked.
 
-> Using Prisma against my Supabase Postgres database (DATABASE_URL is set in `.env`), define a
-> schema with two tables:
+> Using Prisma against my Supabase Postgres (DATABASE_URL in `.env`), define:
 > - `Drug` (id, rxcui string nullable, name, unique on name)
 > - `Interaction` (id, drugAName, drugBName, severity enum [Minor/Moderate/Major],
 >   mechanism text nullable, description text nullable)
 >
-> Write a seed script `/prisma/seed.ts` that reads `/prisma/data/ddinter.csv` and populates
-> the `Interaction` table. Normalize drug names to lowercase for matching. Add an index on
-> (drugAName, drugBName). Run `prisma migrate` against Supabase and seed, then print how many
-> interaction rows were inserted. Confirm the rows appear in the Supabase table editor.
+> Write `/prisma/seed.ts` that reads `/prisma/data/ddinter.csv` into `Interaction`, lowercasing
+> names for matching, with an index on (drugAName, drugBName). Run migrate + seed, print the row
+> count, and confirm rows appear in the Supabase table editor.
 
 ---
 
 ## PIECE 2 — RxNorm normalization service
 
-> Create `/lib/rxnorm.ts` with a function `normalizeDrugName(input: string)` that calls the
-> RxNorm REST API (`findRxcuiByString`, and fall back to `getApproximateMatch` if no exact
-> hit) and returns `{ rxcui, standardName }` or null if not found. Handle brand→generic
-> (e.g. "Tylenol" → "acetaminophen"). Cache results in memory to avoid repeat calls.
-> Add an API route `/api/normalize?name=...` that returns the result so I can test it in the browser.
+> Create `/lib/rxnorm.ts` with `normalizeDrugName(input)` calling the RxNorm REST API
+> (`findRxcuiByString`, falling back to `getApproximateMatch`). Return `{ rxcui, standardName }`
+> or null. Handle brand→generic (e.g. "Tylenol" → "acetaminophen"). Cache in memory.
+> Add `/api/normalize?name=...` to test in the browser.
 
 ---
 
-## PIECE 3 — Interaction-check engine
+## PIECE 3 — Interaction-check engine (DB truth)
 
-> Create `/lib/interactions.ts` with `checkInteractions(drugNames: string[])`. For every
-> unique pair of drugs, normalize both names, then query the `Interaction` table for a match
-> in either order (A-B or B-A). Return a list of found interactions with severity, the two
-> drug names, mechanism, and description. Also return a list of drugs it couldn't recognize.
-> Add a POST API route `/api/check` that accepts `{ drugs: string[] }` and returns the result JSON.
-> Do not fabricate interactions — only return DB matches.
+> Create `/lib/interactions.ts` with `checkInteractions(drugNames[])`. Normalize each name, then
+> for every unique pair query `Interaction` in either order (A-B or B-A). Return found interactions
+> (severity, both names, mechanism, description) and a list of unrecognized drugs. Never fabricate
+> interactions — DB matches only. Add POST `/api/check` accepting `{ drugs: string[] }`.
 
 ---
 
-## PIECE 4 — LLM plain-language explainer
+## PIECE 4 — AI regimen-reasoning engine (the differentiator)
 
-> Create `/lib/llm.ts` with `explainInteraction(interaction)` that sends the DB interaction
-> record to the LLM API and returns a short, plain-English explanation a patient can understand
-> (2 sentences max, no medical jargon, always ending with "Ask your doctor or pharmacist before
-> changing anything."). Read the API key from an env var. Wire this into `/api/check` so each
-> returned interaction includes an `explanation` field. Add graceful fallback text if the LLM call fails.
+> Create `/lib/llm.ts` with two functions:
+> 1. `explainInteraction(hit)` — turns one DB interaction into 2 plain-English sentences, no jargon,
+>    ending "Ask your doctor or pharmacist before changing anything."
+> 2. `analyzeRegimen(drugs, dbHits)` — sends the FULL medication list plus the confirmed DB
+>    interaction hits to the LLM and returns a short "whole-regimen risk summary": cumulative effects
+>    (e.g. combined drowsiness, serotonin/anticholinergic burden), duplicate drug classes, and timing
+>    conflicts. STRICT RULE in the prompt: it may only treat the provided DB hits as confirmed
+>    interactions and must frame everything else as general educational awareness, not new interaction
+>    claims or diagnosis. Read the API key from an env var; graceful fallback text on failure.
+>
+> Wire both into `/api/check` so the response includes per-interaction `explanation` plus a
+> top-level `regimenSummary`.
 
 ---
 
 ## PIECE 5 — Frontend: input + results
 
-> Build the main page at `/app/page.tsx`. A large, accessible form where the user adds
-> medications one at a time (chip/tag list, easy to remove). A prominent "Check my medications"
-> button calls `/api/check`. Render results as cards grouped by severity: Major (red), Moderate
-> (amber), Minor (grey), each showing the two drugs, the plain-language explanation, and severity.
-> Show unrecognized drugs separately with a gentle "we couldn't find this one" note. Big fonts,
-> high contrast, mobile-friendly. Put a persistent disclaimer banner: "Educational tool only —
-> not medical advice."
+> Build `/app/page.tsx`: a large, accessible form to add meds one at a time (removable chips) and a
+> prominent "Check my medications" button hitting `/api/check`. Show the **regimen risk summary** at
+> the top (this is the headline). Below it, interaction cards grouped by severity: Major (red),
+> Moderate (amber), Minor (grey) — each with the two drugs, plain-language explanation, and severity.
+> Unrecognized drugs listed separately with a gentle note. Big fonts, high contrast, mobile-first.
+> Persistent banner: "Educational tool only — not medical advice."
 
 ---
 
-## PIECE 6 — Daily schedule + PDF export
+## PIECE 6 — Photo label reading (core AI, not stretch)
 
-> Add a `/lib/schedule.ts` helper that takes the medication list and buckets each into
-> Morning / Noon / Evening / Night based on typical dosing frequency (default sensible times;
-> this is illustrative, not prescriptive). Render it as a clean visual timetable below the results.
-> Add an "Export PDF for my doctor" button that generates a one-page PDF containing: the full
-> medication list, all flagged interactions with severity, the daily schedule, a timestamp, and
-> the disclaimer. Use react-pdf or pdfkit.
-
----
-
-## PIECE 7 — Polish, accessibility, deploy
-
-> Polish the whole app: loading states, empty states, error handling, keyboard navigation,
-> and ARIA labels for screen readers (this is a health-accessibility app, so accessibility is
-> a scoring point). Add a short "How it works" section and an "About / Safety" page explaining
-> the data sources (DDInter 2.0, RxNorm) and the not-a-diagnosis limitation. Prepare it for
-> Vercel deployment and give me the deploy steps.
+> Add an image-upload option beside the text input. On upload, POST the image to a new
+> `/api/scan` route that calls a vision-capable LLM (`/lib/vision.ts`) to extract medication
+> name(s) and dose from the label. Return the extracted names to the UI as editable chips for the
+> user to CONFIRM before checking — then feed them into the existing `/api/check` flow. Keep text
+> input as the default path; photo is an enhancement layered on top, never a replacement.
 
 ---
 
-## PIECE 8 — STRETCH: photo/OCR (only if Pieces 0–7 are done)
+## PIECE 7 — Daily schedule + PDF export
 
-> Add an image-upload option on the main page. When a user uploads a photo of a medication
-> label, send it to a vision-capable LLM API and extract the drug name(s), then feed them into
-> the existing `/api/check` flow. Show the extracted names for the user to confirm/edit before
-> checking. Keep the text-input path as the default; this is an enhancement, not a replacement.
+> Add `/lib/schedule.ts` bucketing each med into Morning/Noon/Evening/Night by typical frequency
+> (sensible defaults; illustrative, not prescriptive). Render a clean visual timetable under the
+> results. Add "Export PDF for my doctor" generating a one-page PDF: full med list, all flagged
+> interactions with severity, the regimen summary, the schedule, a timestamp, and the disclaimer.
+
+---
+
+## PIECE 8 — Polish, accessibility, deploy
+
+> Polish: loading/empty/error states, keyboard nav, ARIA labels (accessibility is a scoring point
+> for a health app). Add a "How it works" section and an "About / Safety" page naming the data
+> sources (DDInter 2.0, RxNorm) and the not-a-diagnosis limitation. Prepare for Vercel deploy and
+> give me the steps.
 
 ---
 
 ## Suggested 28-day timeline (solo)
-- **Days 1–3:** Pieces 0–1 (scaffold + DB seeded and verified)
-- **Days 4–7:** Pieces 2–3 (normalization + interaction engine working end to end via API)
-- **Days 8–11:** Piece 4–5 (LLM explanations + usable frontend)
-- **Days 12–15:** Piece 6 (schedule + PDF)
-- **Days 16–19:** Piece 7 (polish, accessibility, deploy live)
-- **Days 20–23:** Piece 8 if time allows; otherwise harden and fix bugs
+- **Days 1–3:** Pieces 0–1 (scaffold + Supabase seeded and verified)
+- **Days 4–7:** Pieces 2–3 (normalization + interaction engine end to end)
+- **Days 8–12:** Piece 4–5 (regimen reasoning + usable frontend) — your core is now demoable
+- **Days 13–16:** Piece 6 (photo label reading) — the "wow" AI moment
+- **Days 17–19:** Piece 7 (schedule + PDF)
+- **Days 20–23:** Piece 8 (polish, accessibility, deploy live) + bug hardening
 - **Days 24–26:** Record demo video, write Devpost description, build slide deck
-- **Days 27–28:** Buffer + final submission (don't leave submission to the last hour — deadline is Aug 8, 7:30pm GMT+8)
+- **Days 27–28:** Buffer + submit early (deadline Aug 8, 7:30pm GMT+8 — don't submit in the last hour)
+
+**If you fall behind:** Pieces 0–5 alone are a complete, submittable app. Photo (6) is the first
+thing to cut, then PDF (7). Never cut the regimen summary — that's your innovation story.
 
 ---
 
 ## Submission checklist (from the rules)
-Project Description · Demo Video · GitHub repo (public) · Presentation deck · Team/solo details ·
-Theme = **AI for Social Impact** (or AI & Intelligent Systems) · Live demo link (Vercel URL)
+Project Description · Demo Video · GitHub (public) · Presentation deck (optional) · Team/solo details ·
+Theme = **AI for Social Impact** · Live demo link (Vercel URL)
+⚠️ Confirm the solo option on the submission form — written rules say teams of 2–4.
 
 ## Demo video outline (2–3 min)
-1. The problem: patients on many meds, no one checks the full list (10s, one stat).
-2. Live: type in 4 real meds including a known dangerous pair → red Major warning appears.
-3. Show the plain-language explanation + the daily schedule.
-4. Click Export PDF → show the doctor-ready summary.
-5. Close on data sources + the "not a diagnosis" responsibility. Confident, 20s.
+1. Problem: patients on many meds, no one reviews the full list; cite your pharmacist study (10s).
+2. Live text demo: enter 4 real meds with a known dangerous pair → red Major warning + regimen summary.
+3. Photo demo: snap a pill-bottle label → name auto-extracted → confirm → checked. (Your AI moment.)
+4. Show the daily schedule + Export PDF → doctor-ready summary.
+5. Close on: DB = facts, AI = plain-language + whole-regimen reasoning, and "not a diagnosis." 20s, confident.
