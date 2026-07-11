@@ -1,0 +1,9 @@
+RxNorm API
+getPropNames
+Information returned: Property names
+Service domainhttps://rxnav.nlm.nih.gov
+HTTP request: GET  /REST/propnames.xml
+
+https://lhncbc.nlm.nih.gov/RxNav/APIs/api-RxNorm.getPropNames.html
+
+https://lhncbc.nlm.nih.gov/RxNav/APIs/RxNormAPIs.html
