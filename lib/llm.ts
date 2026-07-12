@@ -1,5 +1,5 @@
 // LLM layer — plain-language interaction explanations + whole-regimen reasoning.
-// Uses Google Gemini via @google/generative-ai.
+// Uses OpenRouter (OpenAI-compatible) via lib/openrouter.ts.
 //
 //   explainInteractions(hits)     -> plain-English text for many hits in ONE call
 //   explainInteraction(hit)       -> same, for a single hit (used rarely)
@@ -8,16 +8,8 @@
 // Everything degrades gracefully to safe static text if the API key is missing,
 // out of quota, or the call fails — so /api/check never breaks because of the LLM.
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { FoundInteraction } from "@/lib/interactions";
-
-// Model history for this project (see memory "gemini-llm-setup"):
-// - "gemini-2.5-flash" (the plan's choice) 404s — retired for new keys.
-// - "gemini-flash-latest" now resolves to gemini-3.5-flash, whose FREE tier is
-//   only 20 requests/day — exhausted almost immediately.
-// - "gemini-flash-lite-latest" has a far more generous free daily quota and is
-//   still multimodal, so we use it here and in lib/vision.ts.
-const MODEL = "gemini-flash-lite-latest";
+import { openrouterChat } from "@/lib/openrouter";
 
 const CTA = "Ask your doctor or pharmacist before changing anything.";
 const REGIMEN_CTA =
@@ -30,43 +22,19 @@ function cacheKey(hit: FoundInteraction): string {
   return `${hit.drugAName}|${hit.drugBName}|${hit.severity}`;
 }
 
-function getClient(): GoogleGenerativeAI | null {
-  // Plan uses GEMINI_API_KEY; fall back to LLM_API_KEY for existing setups.
-  const key = process.env.GEMINI_API_KEY ?? process.env.LLM_API_KEY;
-  if (!key) return null;
-  return new GoogleGenerativeAI(key);
-}
-
 function titleCase(s: string): string {
   return s.length ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
-// Single text-generation call with our standard config. Returns null on any
-// failure (missing key, quota, network, empty) so callers can fall back.
+// Single text-generation call. Returns null on any failure (missing key, quota,
+// network, empty) so callers can fall back.
 async function generateText(
   prompt: string,
   maxOutputTokens: number
 ): Promise<string | null> {
-  const client = getClient();
-  if (!client) return null;
-  try {
-    const model = client.getGenerativeModel({
-      model: MODEL,
-      // thinkingBudget:0 disables internal "thinking" tokens, which otherwise
-      // eat the output budget and truncate the reply. Cast because the SDK's
-      // GenerationConfig type predates thinking models.
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens,
-        thinkingConfig: { thinkingBudget: 0 },
-      } as any,
-    });
-    const res = await model.generateContent(prompt);
-    const text = res.response.text().trim();
-    return text || null;
-  } catch {
-    return null;
-  }
+  return openrouterChat([{ role: "user", content: prompt }], {
+    maxTokens: maxOutputTokens,
+  });
 }
 
 function parseJsonArray(raw: string): unknown {

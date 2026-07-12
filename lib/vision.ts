@@ -1,24 +1,13 @@
 // Vision layer — read medication name(s) + dose from a photo of a label.
-// Uses Google Gemini (multimodal) via @google/generative-ai, same key as lib/llm.ts.
+// Uses OpenRouter (multimodal model) via lib/openrouter.ts.
 //
 // extractMedsFromImage(base64, mimeType) -> ExtractedMed[]
 // Degrades gracefully to [] if the key is missing or the call/parse fails, so
 // /api/scan never throws because of the model.
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// "gemini-flash-lite-latest" — multimodal, and has a far more generous free-tier
-// daily quota than gemini-flash-latest (which now maps to gemini-3.5-flash, only
-// 20 requests/day free). See lib/llm.ts and the "gemini-llm-setup" memory.
-const MODEL = "gemini-flash-lite-latest";
+import { openrouterChat } from "@/lib/openrouter";
 
 export type ExtractedMed = { name: string; dose: string | null };
-
-function getClient(): GoogleGenerativeAI | null {
-  const key = process.env.GEMINI_API_KEY ?? process.env.LLM_API_KEY;
-  if (!key) return null;
-  return new GoogleGenerativeAI(key);
-}
 
 // Pull the first JSON array out of a model response, tolerating code fences or
 // stray prose around it.
@@ -48,9 +37,6 @@ export async function extractMedsFromImage(
   base64: string,
   mimeType: string
 ): Promise<ExtractedMed[]> {
-  const client = getClient();
-  if (!client) return [];
-
   const prompt = `You are reading a photo of a medication label, box, or packaging.
 Extract every distinct medication you can clearly see, with its dose/strength if shown.
 
@@ -65,21 +51,24 @@ Rules:
 No markdown, no commentary — JSON only.`;
 
   try {
-    const model = client.getGenerativeModel({
-      model: MODEL,
-      generationConfig: {
-        temperature: 0,
-        maxOutputTokens: 1024,
-        thinkingConfig: { thinkingBudget: 0 },
-      } as any,
-    });
+    const raw = await openrouterChat(
+      [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "image_url",
+              image_url: { url: `data:${mimeType};base64,${base64}` },
+            },
+          ],
+        },
+      ],
+      { temperature: 0, maxTokens: 1024 }
+    );
+    if (!raw) return [];
 
-    const res = await model.generateContent([
-      { text: prompt },
-      { inlineData: { data: base64, mimeType } },
-    ]);
-
-    const parsed = parseMedArray(res.response.text());
+    const parsed = parseMedArray(raw);
     if (!Array.isArray(parsed)) return [];
 
     const meds: ExtractedMed[] = [];
