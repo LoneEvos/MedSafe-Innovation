@@ -79,6 +79,17 @@ export default function AboutPage() {
           </div>
           <div>
             <dt className="text-lg font-semibold text-gray-900">
+              Curated high-risk supplement
+            </dt>
+            <dd className="text-base">
+              A small, hand-vetted set of well-established dangerous combinations
+              that DDInter under-covers (for example opioid + benzodiazepine, or
+              MAOI + SSRI), based on published sources such as FDA boxed warnings.
+              These are clearly labeled and never AI-generated.
+            </dd>
+          </div>
+          <div>
+            <dt className="text-lg font-semibold text-gray-900">
               RxNorm (U.S. National Library of Medicine)
             </dt>
             <dd className="text-base">
