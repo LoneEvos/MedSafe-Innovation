@@ -56,9 +56,9 @@ export async function checkInteractions(
 
   const recognized: RecognizedDrug[] = [];
   const unrecognized: string[] = [];
-  // Collapse different inputs that normalize to the same generic (e.g.
-  // "Tylenol" and "acetaminophen") so we don't check a drug against itself.
-  const byStandard = new Map<string, RecognizedDrug>();
+  // Collapse inputs that resolve to the same drug (same RxCUI, or same name if
+  // it didn't resolve) so we don't check a drug against itself.
+  const byDrug = new Map<string, RecognizedDrug>();
 
   for (const input of inputs) {
     const norm = await normalizeDrugName(input);
@@ -67,32 +67,36 @@ export async function checkInteractions(
       continue;
     }
     const standardName = norm.standardName.toLowerCase();
-    const entry: RecognizedDrug = {
-      input,
-      rxcui: norm.rxcui,
-      standardName,
-    };
+    const entry: RecognizedDrug = { input, rxcui: norm.rxcui, standardName };
     recognized.push(entry);
-    if (!byStandard.has(standardName)) byStandard.set(standardName, entry);
+    const dedupKey = norm.rxcui || standardName;
+    if (!byDrug.has(dedupKey)) byDrug.set(dedupKey, entry);
   }
 
-  // Build OR conditions for every unique unordered pair, in both orders.
-  const uniqueNames = Array.from(byStandard.keys());
-  const orConditions: { drugAName: string; drugBName: string }[] = [];
-  for (let i = 0; i < uniqueNames.length; i++) {
-    for (let j = i + 1; j < uniqueNames.length; j++) {
-      const a = uniqueNames[i];
-      const b = uniqueNames[j];
-      orConditions.push({ drugAName: a, drugBName: b });
-      orConditions.push({ drugAName: b, drugBName: a });
+  // For each unique unordered pair, match on RxCUI (robust across name forms,
+  // e.g. "aspirin" == "acetylsalicylic acid" == 1191) and also on name as a
+  // fallback for drugs the DB seed couldn't resolve to an RxCUI.
+  const drugs = Array.from(byDrug.values());
+  const orConditions: Record<string, string>[] = [];
+  for (let i = 0; i < drugs.length; i++) {
+    for (let j = i + 1; j < drugs.length; j++) {
+      const x = drugs[i];
+      const y = drugs[j];
+      if (x.rxcui && y.rxcui) {
+        orConditions.push({ rxcuiA: x.rxcui, rxcuiB: y.rxcui });
+        orConditions.push({ rxcuiA: y.rxcui, rxcuiB: x.rxcui });
+      }
+      orConditions.push({ drugAName: x.standardName, drugBName: y.standardName });
+      orConditions.push({ drugAName: y.standardName, drugBName: x.standardName });
     }
   }
 
   let interactions: FoundInteraction[] = [];
   if (orConditions.length > 0) {
-    interactions = await prisma.interaction.findMany({
+    const rows = await prisma.interaction.findMany({
       where: { OR: orConditions },
       select: {
+        id: true,
         drugAName: true,
         drugBName: true,
         severity: true,
@@ -100,6 +104,10 @@ export async function checkInteractions(
         description: true,
       },
     });
+    // A pair can match by both RxCUI and name — dedupe rows by id.
+    interactions = Array.from(
+      new Map(rows.map((r) => [r.id, r])).values()
+    ).map(({ id, ...rest }) => rest);
 
     // Most severe first for easy rendering.
     interactions.sort(

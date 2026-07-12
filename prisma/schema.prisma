@@ -30,6 +30,9 @@ model Interaction {
   mechanism   String?
   description String?
   source      String   @default("DDInter") // "DDInter" | "Curated"
+  rxcuiA      String? // RxNorm id of drug A (null if it didn't resolve)
+  rxcuiB      String? // RxNorm id of drug B
 
   @@index([drugAName, drugBName])
+  @@index([rxcuiA, rxcuiB])
 }

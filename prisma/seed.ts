@@ -2,6 +2,7 @@ import { PrismaClient, Severity } from "@prisma/client";
 import { parse } from "csv-parse/sync";
 import { existsSync, readFileSync, readdirSync } from "fs";
 import { join } from "path";
+import { normalizeDrugName } from "../lib/rxnorm";
 
 // Seeds the Interaction table from two sources:
 //   1. DDInter 2.0 download CSVs (ddinter_downloads_code_*.csv):
@@ -25,7 +26,25 @@ type InteractionRow = {
   mechanism: string | null;
   description: string | null;
   source: string;
+  rxcuiA: string | null;
+  rxcuiB: string | null;
 };
+
+// Resolve every unique drug name to an RxCUI via RxNorm, in parallel batches.
+// Uses the SAME normalizeDrugName as lookup so both sides map identically.
+async function buildRxcuiMap(names: string[]): Promise<Map<string, string | null>> {
+  const map = new Map<string, string | null>();
+  const CONC = 12;
+  for (let i = 0; i < names.length; i += CONC) {
+    const batch = names.slice(i, i + CONC);
+    const res = await Promise.all(batch.map((n) => normalizeDrugName(n)));
+    batch.forEach((n, j) => map.set(n, res[j]?.rxcui ?? null));
+    if (i % 300 === 0 || i + CONC >= names.length) {
+      console.log(`  RxCUI ${Math.min(i + CONC, names.length)}/${names.length}`);
+    }
+  }
+  return map;
+}
 
 function toSeverity(level: string): Severity | null {
   switch (level.trim().toLowerCase()) {
@@ -86,6 +105,8 @@ async function main() {
         mechanism: null,
         description: null,
         source: "DDInter",
+        rxcuiA: null,
+        rxcuiB: null,
       });
       drugNames.add(a);
       drugNames.add(b);
@@ -128,6 +149,8 @@ async function main() {
         mechanism: row.mechanism?.trim() || null,
         description: row.description?.trim() || null,
         source: "Curated",
+        rxcuiA: null,
+        rxcuiB: null,
       });
       drugNames.add(a);
       drugNames.add(b);
@@ -142,6 +165,17 @@ async function main() {
   const interactions = Array.from(byPair.values());
   console.log(`\nTotal unique interactions to insert: ${interactions.length}`);
 
+  // Resolve RxCUIs so lookup can match on stable IDs, not name forms
+  // (e.g. "aspirin" and "acetylsalicylic acid" both -> 1191).
+  console.log(`Resolving RxCUIs for ${drugNames.size} drug names via RxNorm...`);
+  const rxcui = await buildRxcuiMap(Array.from(drugNames));
+  for (const row of interactions) {
+    row.rxcuiA = rxcui.get(row.drugAName) ?? null;
+    row.rxcuiB = rxcui.get(row.drugBName) ?? null;
+  }
+  const resolved = Array.from(rxcui.values()).filter(Boolean).length;
+  console.log(`  resolved ${resolved}/${drugNames.size} names to an RxCUI.`);
+
   // Idempotent: clear existing rows so re-running doesn't duplicate.
   console.log("Clearing existing Interaction and Drug rows...");
   await prisma.interaction.deleteMany();
@@ -154,7 +188,10 @@ async function main() {
   }
 
   console.log("Inserting distinct drugs...");
-  const drugData = Array.from(drugNames).map((name) => ({ name }));
+  const drugData = Array.from(drugNames).map((name) => ({
+    name,
+    rxcui: rxcui.get(name) ?? null,
+  }));
   for (let i = 0; i < drugData.length; i += BATCH) {
     await prisma.drug.createMany({
       data: drugData.slice(i, i + BATCH),
