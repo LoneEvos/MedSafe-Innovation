@@ -82,10 +82,16 @@ export async function explainInteractions(
   if (pending.length === 0) return results as string[];
 
   const list = pending
-    .map(
-      ({ hit }, i) =>
-        `${i + 1}. ${hit.drugAName} + ${hit.drugBName} — severity: ${hit.severity}`
-    )
+    .map(({ hit }, i) => {
+      // Include curated mechanism/description as grounding when present.
+      const extra = [
+        hit.mechanism ? `mechanism: ${hit.mechanism}` : "",
+        hit.description ? `note: ${hit.description}` : "",
+      ]
+        .filter(Boolean)
+        .join("; ");
+      return `${i + 1}. ${hit.drugAName} + ${hit.drugBName} — severity: ${hit.severity}${extra ? ` (${extra})` : ""}`;
+    })
     .join("\n");
 
   const prompt = `You are a helpful pharmacist assistant explaining drug interactions to a patient with no medical background.

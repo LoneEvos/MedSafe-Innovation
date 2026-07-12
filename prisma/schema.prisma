@@ -29,6 +29,7 @@ model Interaction {
   severity    Severity
   mechanism   String?
   description String?
+  source      String   @default("DDInter") // "DDInter" | "Curated"
 
   @@index([drugAName, drugBName])
 }
