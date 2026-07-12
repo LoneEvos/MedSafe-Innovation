@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
+import { buildSchedule, TIME_SLOTS, SLOT_TIMES } from "@/lib/schedule";
+import { exportRegimenPdf } from "@/lib/pdf";
 
 type Severity = "Major" | "Moderate" | "Minor";
 
@@ -172,6 +174,27 @@ export default function Home() {
   const noInteractions =
     result !== null && hasRecognizedPair && result.interactions.length === 0;
 
+  // Build the illustrative daily schedule from the recognized (normalized) meds.
+  const recognizedNames = result?.recognized.map((r) => r.standardName) ?? [];
+  const schedule = buildSchedule(recognizedNames);
+
+  function downloadPdf() {
+    if (!result) return;
+    exportRegimenPdf({
+      meds,
+      recognized: Array.from(new Set(recognizedNames)),
+      unrecognized: result.unrecognized,
+      interactions: result.interactions.map((i) => ({
+        drugAName: i.drugAName,
+        drugBName: i.drugBName,
+        severity: i.severity,
+        explanation: i.explanation,
+      })),
+      regimenSummary: result.regimenSummary,
+      schedule,
+    });
+  }
+
   return (
     <div className="min-h-screen bg-white text-gray-900">
       {/* Persistent disclaimer banner */}
@@ -337,6 +360,15 @@ export default function Home() {
                 )}
               </section>
 
+              {/* Export PDF for the doctor */}
+              <button
+                type="button"
+                onClick={downloadPdf}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-indigo-300 bg-white px-6 py-3.5 text-lg font-semibold text-indigo-800 transition hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              >
+                📄 Export PDF for my doctor
+              </button>
+
               {/* Interaction cards grouped by severity */}
               {grouped.length > 0 && (
                 <section aria-labelledby="interactions-heading">
@@ -422,6 +454,54 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
+                </section>
+              )}
+
+              {/* Illustrative daily schedule */}
+              {recognizedNames.length > 0 && (
+                <section aria-labelledby="schedule-heading">
+                  <h2
+                    id="schedule-heading"
+                    className="mb-1 text-2xl font-bold"
+                  >
+                    Daily schedule
+                  </h2>
+                  <p className="mb-4 text-sm text-gray-500">
+                    Illustrative timing only — this is a rough guide, not a
+                    prescription. Follow your doctor&apos;s or pharmacist&apos;s
+                    instructions.
+                  </p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {TIME_SLOTS.map((slot) => (
+                      <div
+                        key={slot}
+                        className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
+                      >
+                        <div className="mb-2 flex items-baseline justify-between">
+                          <h3 className="text-lg font-bold text-gray-800">
+                            {slot}
+                          </h3>
+                          <span className="text-xs text-gray-500">
+                            {SLOT_TIMES[slot]}
+                          </span>
+                        </div>
+                        {schedule.bySlot[slot].length > 0 ? (
+                          <ul className="space-y-1.5">
+                            {schedule.bySlot[slot].map((name) => (
+                              <li
+                                key={name}
+                                className="rounded-lg bg-white px-3 py-1.5 text-base font-medium text-gray-800 shadow-sm"
+                              >
+                                {titleCase(name)}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-base text-gray-400">—</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </section>
               )}
             </div>
