@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkInteractions } from "@/lib/interactions";
-import { explainInteraction, analyzeRegimen } from "@/lib/llm";
+import { explainInteractions, analyzeRegimen } from "@/lib/llm";
 
 const DISCLAIMER =
   "Educational tool only — not medical advice. Always consult your doctor or pharmacist.";
@@ -26,19 +26,20 @@ export async function POST(req: NextRequest) {
 
   const result = await checkInteractions(drugs);
 
-  // Enrich in parallel: per-interaction explanations + one regimen summary.
-  const [interactions, regimenSummary] = await Promise.all([
-    Promise.all(
-      result.interactions.map(async (hit) => ({
-        ...hit,
-        explanation: await explainInteraction(hit),
-      }))
-    ),
+  // Enrich in parallel: all explanations in ONE call + one regimen summary.
+  // Batching keeps each check to ~2 API requests, which matters on Gemini's
+  // stingy free-tier daily quota.
+  const [explanations, regimenSummary] = await Promise.all([
+    explainInteractions(result.interactions),
     analyzeRegimen(
       result.recognized.map((r) => r.standardName),
       result.interactions
     ),
   ]);
+  const interactions = result.interactions.map((hit, i) => ({
+    ...hit,
+    explanation: explanations[i],
+  }));
 
   return NextResponse.json({
     ...result,

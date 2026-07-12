@@ -7,10 +7,10 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// The plan specified "gemini-2.5-flash", but Google retired the 2.x flash models
-// for new API keys (they 404). "gemini-flash-latest" is the current multimodal
-// flash alias and reads images fine. See lib/llm.ts for the same rationale.
-const MODEL = "gemini-flash-latest";
+// "gemini-flash-lite-latest" — multimodal, and has a far more generous free-tier
+// daily quota than gemini-flash-latest (which now maps to gemini-3.5-flash, only
+// 20 requests/day free). See lib/llm.ts and the "gemini-llm-setup" memory.
+const MODEL = "gemini-flash-lite-latest";
 
 export type ExtractedMed = { name: string; dose: string | null };
 
