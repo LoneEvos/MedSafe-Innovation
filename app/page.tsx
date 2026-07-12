@@ -56,6 +56,35 @@ function titleCase(s: string): string {
   return s.length ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
+// Downscale a label photo before upload. Phone photos can be several MB, which
+// exceeds Vercel's serverless request-body limit (~4.5 MB) and slows the scan.
+// Caps the longest edge at 1600px and re-encodes as JPEG. Falls back to the
+// original file if anything goes wrong.
+async function downscaleImage(file: File): Promise<Blob> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const maxDim = 1600;
+    let { width, height } = bitmap;
+    if (Math.max(width, height) > maxDim) {
+      const scale = maxDim / Math.max(width, height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.85)
+    );
+    return blob ?? file;
+  } catch {
+    return file;
+  }
+}
+
 export default function Home() {
   const [meds, setMeds] = useState<string[]>([]);
   const [input, setInput] = useState("");
@@ -114,8 +143,9 @@ export default function Home() {
     setScanNote(null);
     setError(null);
     try {
+      const upload = await downscaleImage(file);
       const fd = new FormData();
-      fd.append("image", file);
+      fd.append("image", upload, "label.jpg");
       const res = await fetch("/api/scan", { method: "POST", body: fd });
       if (!res.ok) throw new Error(`Scan failed (${res.status})`);
       const data: { meds?: { name: string; dose: string | null }[] } =
@@ -196,18 +226,11 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
-      {/* Persistent disclaimer banner */}
-      <div
-        role="note"
-        className="sticky top-0 z-10 bg-amber-100 px-4 py-3 text-center text-sm font-semibold text-amber-950 shadow-sm sm:text-base"
-      >
-        ⚕️ Educational tool only — not medical advice. Always consult your doctor
-        or pharmacist.
-      </div>
-
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-10">
-        <header className="mb-8 text-center">
+    <main
+      id="main-content"
+      className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-10"
+    >
+      <header className="mb-8 text-center">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
             MedSafe
           </h1>
@@ -507,7 +530,59 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* How it works */}
+        <section
+          aria-labelledby="how-heading"
+          className="mt-12 rounded-2xl border border-gray-200 bg-gray-50 p-5 sm:p-6"
+        >
+          <h2 id="how-heading" className="mb-4 text-2xl font-bold">
+            How it works
+          </h2>
+          <ol className="space-y-4">
+            <li className="flex gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-blue-600 font-bold text-white"
+              >
+                1
+              </span>
+              <p className="text-base text-gray-700">
+                <span className="font-semibold">Add your medicines</span> — type
+                each one, or snap a photo of the label and we&apos;ll read the
+                name for you to confirm.
+              </p>
+            </li>
+            <li className="flex gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-blue-600 font-bold text-white"
+              >
+                2
+              </span>
+              <p className="text-base text-gray-700">
+                <span className="font-semibold">We check every pair</span> — drug
+                names are standardized via RxNorm, then each pair is looked up in
+                a real interaction database (DDInter 2.0). We never invent
+                interactions.
+              </p>
+            </li>
+            <li className="flex gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-blue-600 font-bold text-white"
+              >
+                3
+              </span>
+              <p className="text-base text-gray-700">
+                <span className="font-semibold">You get a clear summary</span> —
+                plain-language explanations, a whole-regimen overview, an
+                illustrative daily schedule, and a one-page PDF to share with your
+                doctor.
+              </p>
+            </li>
+          </ol>
+        </section>
       </main>
-    </div>
   );
 }
