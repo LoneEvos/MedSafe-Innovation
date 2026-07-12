@@ -13,6 +13,8 @@ type Interaction = {
   mechanism: string | null;
   description: string | null;
   explanation: string;
+  rxcuiA: string | null;
+  rxcuiB: string | null;
 };
 
 type RecognizedDrug = {
@@ -231,6 +233,17 @@ export default function Home() {
     });
   }
 
+  // Show the term the user actually entered (matched by RxCUI), annotating the
+  // DB's canonical name when it differs (e.g. "Aspirin (acetylsalicylic acid)").
+  function displayDrug(dbName: string, rxcui: string | null): string {
+    const input = result?.recognized.find(
+      (r) => (rxcui && r.rxcui === rxcui) || r.standardName === dbName.toLowerCase()
+    )?.input;
+    if (!input) return titleCase(dbName);
+    if (input.toLowerCase() === dbName.toLowerCase()) return titleCase(input);
+    return `${titleCase(input)} (${dbName})`;
+  }
+
   return (
     <main
       id="main-content"
@@ -433,8 +446,8 @@ export default function Home() {
                               >
                                 <div className="mb-2 flex flex-wrap items-center gap-2">
                                   <span className="text-lg font-bold text-gray-900">
-                                    {titleCase(it.drugAName)} +{" "}
-                                    {titleCase(it.drugBName)}
+                                    {displayDrug(it.drugAName, it.rxcuiA)} +{" "}
+                                    {displayDrug(it.drugBName, it.rxcuiB)}
                                   </span>
                                   <span
                                     className={`rounded-full px-3 py-0.5 text-sm font-semibold ${styles.badge}`}

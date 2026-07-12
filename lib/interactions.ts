@@ -19,6 +19,8 @@ export type FoundInteraction = {
   severity: Severity;
   mechanism: string | null;
   description: string | null;
+  rxcuiA: string | null;
+  rxcuiB: string | null;
 };
 
 export type RecognizedDrug = {
@@ -102,6 +104,8 @@ export async function checkInteractions(
         severity: true,
         mechanism: true,
         description: true,
+        rxcuiA: true,
+        rxcuiB: true,
       },
     });
     // A pair can match by both RxCUI and name — dedupe rows by id.
