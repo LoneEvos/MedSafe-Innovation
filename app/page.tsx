@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 type Severity = "Major" | "Moderate" | "Minor";
 
@@ -60,6 +60,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CheckResponse | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanNote, setScanNote] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function addMed(e?: FormEvent) {
     e?.preventDefault();
@@ -74,8 +77,67 @@ export default function Home() {
     setInput("");
   }
 
+  // Batch-add scanned names, skipping ones already present. Returns the names
+  // that were actually added.
+  function addManyMeds(names: string[]): string[] {
+    const added: string[] = [];
+    setMeds((prev) => {
+      const lower = new Set(prev.map((m) => m.toLowerCase()));
+      const next = [...prev];
+      for (const raw of names) {
+        const name = raw.trim();
+        if (!name || lower.has(name.toLowerCase())) continue;
+        lower.add(name.toLowerCase());
+        next.push(name);
+        added.push(name);
+      }
+      return next;
+    });
+    return added;
+  }
+
   function removeMed(name: string) {
     setMeds((prev) => prev.filter((m) => m !== name));
+  }
+
+  async function onFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file later
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setScanNote("Please choose an image file.");
+      return;
+    }
+    setScanning(true);
+    setScanNote(null);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch("/api/scan", { method: "POST", body: fd });
+      if (!res.ok) throw new Error(`Scan failed (${res.status})`);
+      const data: { meds?: { name: string; dose: string | null }[] } =
+        await res.json();
+      const found = (data.meds ?? [])
+        .map((m) => m.name)
+        .filter((n): n is string => Boolean(n && n.trim()));
+      if (found.length === 0) {
+        setScanNote(
+          "We couldn't read any medication from that photo. Try a clearer photo or type the name."
+        );
+        return;
+      }
+      addManyMeds(found);
+      setScanNote(
+        `Added from photo: ${found.join(", ")}. Please review and edit the chips below before checking.`
+      );
+    } catch {
+      setScanNote(
+        "Something went wrong reading the photo. Please try again or type the name."
+      );
+    } finally {
+      setScanning(false);
+    }
   }
 
   async function check() {
@@ -167,6 +229,36 @@ export default function Home() {
             </button>
           </form>
 
+          {/* Photo scan — enhancement layered on top of the text input */}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <span className="text-sm text-gray-500">or</span>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={scanning}
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-blue-300 bg-white px-4 py-2.5 text-base font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {scanning ? "Reading label…" : "📷 Scan a label photo"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={onFileSelected}
+              aria-label="Upload a photo of a medication label"
+              className="sr-only"
+            />
+          </div>
+          {scanNote && (
+            <p
+              role="status"
+              className="mt-2 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-900"
+            >
+              {scanNote}
+            </p>
+          )}
+
           {/* Med chips */}
           {meds.length > 0 && (
             <ul className="mt-4 flex flex-wrap gap-2" aria-label="Your medications">
@@ -236,9 +328,11 @@ export default function Home() {
                 {result.recognized.length > 0 && (
                   <p className="mt-4 text-sm text-blue-800">
                     Recognized:{" "}
-                    {result.recognized
-                      .map((r) => titleCase(r.standardName))
-                      .join(", ")}
+                    {Array.from(
+                      new Set(
+                        result.recognized.map((r) => titleCase(r.standardName))
+                      )
+                    ).join(", ")}
                   </p>
                 )}
               </section>
