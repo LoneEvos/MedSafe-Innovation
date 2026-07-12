@@ -172,8 +172,8 @@ export default function Home() {
     }
   }
 
-  async function check() {
-    if (meds.length === 0) return;
+  async function check(drugs: string[] = meds) {
+    if (drugs.length === 0) return;
     setLoading(true);
     setError(null);
     setResult(null);
@@ -181,7 +181,7 @@ export default function Home() {
       const res = await fetch("/api/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ drugs: meds }),
+        body: JSON.stringify({ drugs }),
       });
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data: CheckResponse = await res.json();
@@ -207,6 +207,12 @@ export default function Home() {
   // Build the illustrative daily schedule from the recognized (normalized) meds.
   const recognizedNames = result?.recognized.map((r) => r.standardName) ?? [];
   const schedule = buildSchedule(recognizedNames);
+
+  function loadExample() {
+    const example = ["warfarin", "aspirin", "ibuprofen"];
+    setMeds(example);
+    check(example);
+  }
 
   function downloadPdf() {
     if (!result) return;
@@ -234,8 +240,8 @@ export default function Home() {
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
             MedSafe
           </h1>
-          <p className="mt-3 text-lg text-gray-600 sm:text-xl">
-            Add your medications to check for known drug–drug interactions.
+          <p className="mt-3 text-lg font-semibold text-gray-800 sm:text-xl">
+            Catch dangerous drug interactions before they catch you.
           </p>
         </header>
 
@@ -330,7 +336,7 @@ export default function Home() {
 
           <button
             type="button"
-            onClick={check}
+            onClick={() => check()}
             disabled={meds.length === 0 || loading}
             aria-busy={loading}
             className="mt-5 w-full rounded-xl bg-emerald-600 px-6 py-4 text-xl font-bold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:bg-gray-300"
@@ -339,7 +345,15 @@ export default function Home() {
           </button>
           {meds.length === 0 && (
             <p className="mt-3 text-center text-sm text-gray-500">
-              Add at least one medication to get started.
+              Add at least one medication, or{" "}
+              <button
+                type="button"
+                onClick={loadExample}
+                className="font-semibold text-blue-700 underline hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                try an example (warfarin + aspirin + ibuprofen)
+              </button>
+              .
             </p>
           )}
         </section>
