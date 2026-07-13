@@ -1,55 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Figtree, Noto_Sans } from "next/font/google";
 import "./globals.css";
-
-// ui-ux-pro-max healthcare pairing: Figtree (headings) + Noto Sans (body).
-const body = Noto_Sans({
-  subsets: ["latin"],
-  variable: "--font-body",
-  weight: ["400", "500", "700"],
-  display: "swap",
-});
-const heading = Figtree({
-  subsets: ["latin"],
-  variable: "--font-heading",
-  weight: ["500", "600", "700"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "MedSafe — Drug interaction checker",
   description:
-    "Check a medication list for drug–drug interactions, build a daily schedule, and export a summary for your doctor. Educational, not medical advice.",
+    "Educational tool that checks a medication list for drug–drug interactions, builds a daily schedule, and exports a PDF for your doctor. Not medical advice.",
 };
-
-// Small, restrained wordmark: a rounded square with a checkmark (not a cliché
-// medical cross, not an emoji).
-function Logo() {
-  return (
-    <span className="inline-flex items-center gap-2">
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <rect width="24" height="24" rx="6" fill="var(--primary)" />
-        <path
-          d="M7 12.5l3 3 7-7"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className="font-heading text-lg font-semibold text-ink">
-        MedSafe
-      </span>
-    </span>
-  );
-}
 
 export default function RootLayout({
   children,
@@ -57,60 +14,64 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${body.variable} ${heading.variable}`}>
-      <body className="flex min-h-screen flex-col font-sans antialiased">
+    <html lang="en">
+      <body className="flex min-h-screen flex-col antialiased">
+        {/* Keyboard users can jump straight to the content */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:font-medium focus:text-white"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:font-semibold focus:text-white"
         >
           Skip to main content
         </a>
 
-        {/* Slim header */}
-        <header className="border-b border-line bg-surface">
-          <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-3">
-            <Link href="/" className="rounded-sm">
-              <Logo />
+        {/* Primary navigation */}
+        <nav aria-label="Primary" className="border-b border-gray-200 bg-white">
+          <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+            <Link
+              href="/"
+              className="text-lg font-extrabold tracking-tight text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            >
+              ⚕️ MedSafe
             </Link>
-            <nav aria-label="Primary" className="flex gap-6 text-sm font-medium">
-              <Link href="/" className="rounded-sm text-body hover:text-primary">
+            <div className="flex gap-4 text-sm font-semibold">
+              <Link
+                href="/"
+                className="rounded px-1 text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
                 Home
               </Link>
               <Link
                 href="/about"
-                className="rounded-sm text-body hover:text-primary"
+                className="rounded px-1 text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
               >
-                About &amp; safety
+                About / Safety
               </Link>
-            </nav>
+            </div>
           </div>
-        </header>
+        </nav>
 
-        {/* Disclaimer — quiet, persistent, not decorative */}
+        {/* Persistent disclaimer banner — on every page */}
         <div
           role="note"
-          className="border-b border-line bg-primary-tint text-primary-strong"
+          className="sticky top-0 z-10 bg-amber-100 px-4 py-3 text-center text-sm font-semibold text-amber-950 shadow-sm sm:text-base"
         >
-          <div className="mx-auto max-w-4xl px-6 py-2 text-center text-sm">
-            Educational tool only — not medical advice. Always consult your
-            doctor or pharmacist.
-          </div>
+          ⚕️ Educational tool only — not medical advice. Always consult your
+          doctor or pharmacist.
         </div>
 
         {children}
 
-        <footer className="mt-auto border-t border-line bg-surface">
-          <div className="mx-auto max-w-4xl px-6 py-8 text-sm text-muted">
+        <footer className="mt-auto border-t border-gray-200 bg-gray-50">
+          <div className="mx-auto max-w-3xl px-4 py-8 text-sm text-gray-500">
             <p>
               MedSafe is an educational awareness tool, not a diagnosis. Always
               consult your doctor or pharmacist before changing any medication.
             </p>
             <p className="mt-2">
-              Interaction data: DDInter 2.0 &amp; a curated high-risk supplement ·
-              Drug names via RxNorm (U.S. National Library of Medicine) ·
-              Plain-language explanations generated by AI.{" "}
-              <Link href="/about" className="font-medium text-primary underline">
-                About &amp; safety
+              Interaction data: DDInter 2.0 · Drug names via RxNorm (U.S. National
+              Library of Medicine) · Plain-language explanations generated by AI.{" "}
+              <Link href="/about" className="font-medium underline">
+                About &amp; safety →
               </Link>
             </p>
           </div>

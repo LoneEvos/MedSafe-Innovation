@@ -35,22 +35,22 @@ const SEVERITY_ORDER: Severity[] = ["Major", "Moderate", "Minor"];
 
 const SEVERITY_STYLES: Record<
   Severity,
-  { border: string; badge: string; label: string }
+  { card: string; badge: string; heading: string }
 > = {
   Major: {
-    border: "border-l-sev-major",
-    badge: "bg-sev-major-bg text-sev-major",
-    label: "text-sev-major",
+    card: "border-red-300 bg-red-50",
+    badge: "bg-red-600 text-white",
+    heading: "text-red-900",
   },
   Moderate: {
-    border: "border-l-sev-moderate",
-    badge: "bg-sev-moderate-bg text-sev-moderate",
-    label: "text-sev-moderate",
+    card: "border-amber-300 bg-amber-50",
+    badge: "bg-amber-500 text-white",
+    heading: "text-amber-900",
   },
   Minor: {
-    border: "border-l-sev-minor",
-    badge: "bg-sev-minor-bg text-sev-minor",
-    label: "text-sev-minor",
+    card: "border-gray-300 bg-gray-100",
+    badge: "bg-gray-600 text-white",
+    heading: "text-gray-800",
   },
 };
 
@@ -163,7 +163,7 @@ export default function Home() {
       }
       addManyMeds(found);
       setScanNote(
-        `Added from photo: ${found.join(", ")}. Review and edit the list below before checking.`
+        `Added from photo: ${found.join(", ")}. Please review and edit the chips below before checking.`
       );
     } catch {
       setScanNote(
@@ -244,372 +244,372 @@ export default function Home() {
     return `${titleCase(input)} (${dbName})`;
   }
 
-  const btnPrimary =
-    "cursor-pointer rounded-md bg-cta px-5 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-cta-strong disabled:cursor-not-allowed disabled:opacity-50";
-  const btnGhost =
-    "cursor-pointer rounded-md border border-line bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors duration-200 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
-
   return (
     <main
       id="main-content"
-      className="mx-auto w-full max-w-4xl flex-1 px-6 py-10"
+      className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-10"
     >
-      {/* Hero — left-aligned, restrained */}
-      <section className="max-w-2xl">
-        <h1 className="font-heading text-3xl font-semibold leading-tight text-ink sm:text-4xl">
-          Catch dangerous drug interactions before they catch you.
-        </h1>
-        <p className="mt-4 text-base leading-relaxed text-muted sm:text-lg">
-          Enter your medications to check them against a clinical interaction
-          database, read plain-language explanations, and export a summary for
-          your doctor.
-        </p>
-      </section>
-
-      {/* Input area */}
-      <section
-        aria-labelledby="add-med-heading"
-        className="mt-8 rounded-lg border border-line bg-surface p-6 shadow-card"
-      >
-        <h2 id="add-med-heading" className="sr-only">
-          Add medications
-        </h2>
-        <label
-          htmlFor="med-input"
-          className="block text-sm font-medium text-ink"
-        >
-          Add a medication
-        </label>
-        <form onSubmit={addMed} className="mt-2 flex flex-col gap-2 sm:flex-row">
-          <input
-            id="med-input"
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addMed();
-              }
-            }}
-            placeholder="e.g. warfarin, Tylenol, ibuprofen"
-            autoComplete="off"
-            className="flex-1 rounded-md border border-line bg-surface px-4 py-2.5 text-base text-ink placeholder:text-muted focus:border-primary"
-          />
-          <button type="submit" disabled={!input.trim()} className={btnGhost}>
-            Add
-          </button>
-        </form>
-
-        {/* Photo scan — a layered enhancement, not the default path */}
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted">
-          <span>or</span>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={scanning}
-            className={btnGhost}
-          >
-            {scanning ? "Reading label…" : "Upload a label photo"}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={onFileSelected}
-            aria-label="Upload a photo of a medication label"
-            className="sr-only"
-          />
-        </div>
-        {scanNote && (
-          <p
-            role="status"
-            className="mt-3 rounded-md border border-line bg-surface-2 px-3 py-2 text-sm text-body"
-          >
-            {scanNote}
+      <header className="mb-8 text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+            MedSafe
+          </h1>
+          <p className="mt-3 text-lg font-semibold text-gray-800 sm:text-xl">
+            Catch dangerous drug interactions before they catch you.
           </p>
-        )}
+        </header>
 
-        {/* Medication list */}
-        {meds.length > 0 && (
-          <ul
-            className="mt-5 flex flex-wrap gap-2"
-            aria-label="Your medications"
-          >
-            {meds.map((med) => (
-              <li key={med}>
-                <span className="inline-flex items-center gap-1.5 rounded-md border border-line bg-primary-tint py-1 pl-3 pr-1 text-sm font-medium text-primary-strong">
-                  {med}
-                  <button
-                    type="button"
-                    onClick={() => removeMed(med)}
-                    aria-label={`Remove ${med}`}
-                    className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-primary-strong/70 transition-colors duration-200 hover:bg-primary/15 hover:text-primary-strong"
-                  >
-                    <span aria-hidden="true" className="text-base leading-none">
-                      ×
-                    </span>
-                  </button>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Input form */}
+        <section
+          aria-labelledby="add-med-heading"
+          className="rounded-2xl border border-gray-200 bg-gray-50 p-5 sm:p-6"
+        >
+          <h2 id="add-med-heading" className="sr-only">
+            Add medications
+          </h2>
+          <form onSubmit={addMed} className="flex flex-col gap-3 sm:flex-row">
+            <label htmlFor="med-input" className="sr-only">
+              Add a medication
+            </label>
+            <input
+              id="med-input"
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addMed();
+                }
+              }}
+              placeholder="e.g. warfarin, Tylenol, ibuprofen…"
+              autoComplete="off"
+              className="flex-1 rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-lg text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim()}
+              className="rounded-xl bg-blue-600 px-6 py-3 text-lg font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              Add
+            </button>
+          </form>
 
-        <div className="mt-6 border-t border-line pt-5">
+          {/* Photo scan — enhancement layered on top of the text input */}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <span className="text-sm text-gray-500">or</span>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={scanning}
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-blue-300 bg-white px-4 py-2.5 text-base font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {scanning ? "Reading label…" : "📷 Scan a label photo"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={onFileSelected}
+              aria-label="Upload a photo of a medication label"
+              className="sr-only"
+            />
+          </div>
+          {scanNote && (
+            <p
+              role="status"
+              className="mt-2 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-900"
+            >
+              {scanNote}
+            </p>
+          )}
+
+          {/* Med chips */}
+          {meds.length > 0 && (
+            <ul className="mt-4 flex flex-wrap gap-2" aria-label="Your medications">
+              {meds.map((med) => (
+                <li key={med}>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 py-1.5 pl-4 pr-1.5 text-base font-medium text-blue-900">
+                    {med}
+                    <button
+                      type="button"
+                      onClick={() => removeMed(med)}
+                      aria-label={`Remove ${med}`}
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-blue-700 transition hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      <span aria-hidden="true" className="text-lg leading-none">
+                        ×
+                      </span>
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
           <button
             type="button"
             onClick={() => check()}
             disabled={meds.length === 0 || loading}
             aria-busy={loading}
-            className={`${btnPrimary} w-full py-3 text-base sm:w-auto`}
+            className="mt-5 w-full rounded-xl bg-emerald-600 px-6 py-4 text-xl font-bold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {loading ? "Checking…" : "Check my medications"}
           </button>
           {meds.length === 0 && (
-            <p className="mt-3 text-sm text-muted">
+            <p className="mt-3 text-center text-sm text-gray-500">
               Add at least one medication, or{" "}
               <button
                 type="button"
                 onClick={loadExample}
-                className="cursor-pointer font-medium text-primary underline underline-offset-2 hover:text-primary-strong"
+                className="font-semibold text-blue-700 underline hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
               >
-                try an example
-              </button>{" "}
-              (warfarin + aspirin + ibuprofen).
+                try an example (warfarin + aspirin + ibuprofen)
+              </button>
+              .
             </p>
           )}
-        </div>
-      </section>
+        </section>
 
-      {/* Results */}
-      <div aria-live="polite" className="mt-10">
-        {error && (
-          <div
-            role="alert"
-            className="rounded-md border border-sev-major/40 bg-sev-major-bg px-4 py-3 text-sm font-medium text-sev-major"
-          >
-            {error}
-          </div>
-        )}
-
-        {result && (
-          <div className="space-y-10">
-            {/* Regimen summary — the headline */}
-            <section
-              aria-labelledby="regimen-heading"
-              className="rounded-lg border border-line border-l-4 border-l-primary bg-surface p-6 shadow-card"
+        {/* Results */}
+        <div aria-live="polite" className="mt-8">
+          {error && (
+            <div
+              role="alert"
+              className="rounded-xl border-2 border-red-300 bg-red-50 p-4 text-lg font-medium text-red-900"
             >
-              <h2
-                id="regimen-heading"
-                className="font-heading text-xl font-semibold text-ink"
-              >
-                Whole-regimen summary
-              </h2>
-              <p className="mt-3 whitespace-pre-line leading-relaxed text-body">
-                {result.regimenSummary}
-              </p>
-              {result.recognized.length > 0 && (
-                <p className="mt-4 text-sm text-muted">
-                  Recognized:{" "}
-                  {Array.from(
-                    new Set(
-                      result.recognized.map((r) => titleCase(r.standardName))
-                    )
-                  ).join(", ")}
-                </p>
-              )}
-              <div className="mt-5">
-                <button
-                  type="button"
-                  onClick={downloadPdf}
-                  className={btnGhost}
-                >
-                  Export PDF for my doctor
-                </button>
-              </div>
-            </section>
+              {error}
+            </div>
+          )}
 
-            {/* Interactions grouped by severity */}
-            {grouped.length > 0 && (
-              <section aria-labelledby="interactions-heading">
-                <h2
-                  id="interactions-heading"
-                  className="font-heading text-xl font-semibold text-ink"
-                >
-                  Interactions found ({result.interactions.length})
-                </h2>
-                <div className="mt-5 space-y-6">
-                  {grouped.map((group) => {
-                    const styles = SEVERITY_STYLES[group.severity];
-                    return (
-                      <div key={group.severity}>
-                        <h3
-                          className={`text-sm font-semibold uppercase tracking-wide ${styles.label}`}
-                        >
-                          {group.severity} · {group.items.length}
-                        </h3>
-                        <ul className="mt-3 space-y-3">
-                          {group.items.map((it, idx) => (
-                            <li
-                              key={`${it.drugAName}-${it.drugBName}-${idx}`}
-                              className={`rounded-md border border-line border-l-4 ${styles.border} bg-surface p-5 shadow-card`}
-                            >
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-medium text-ink">
-                                  {displayDrug(it.drugAName, it.rxcuiA)} +{" "}
-                                  {displayDrug(it.drugBName, it.rxcuiB)}
-                                </span>
-                                <span
-                                  className={`rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${styles.badge}`}
-                                >
-                                  {it.severity}
-                                </span>
-                              </div>
-                              <p className="mt-2 leading-relaxed text-body">
-                                {it.explanation}
-                              </p>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            {/* No interactions found */}
-            {noInteractions && (
-              <section className="rounded-md border border-line border-l-4 border-l-primary bg-surface p-5 text-body shadow-card">
-                No known interactions were found between these medications in our
-                data source. This does not guarantee they are safe together —
-                always confirm with your doctor or pharmacist.
-              </section>
-            )}
-
-            {/* Unrecognized drugs */}
-            {result.unrecognized.length > 0 && (
+          {result && (
+            <div className="space-y-8">
+              {/* Regimen summary — the headline */}
               <section
-                aria-labelledby="unrecognized-heading"
-                className="rounded-md border border-line bg-surface p-5 shadow-card"
+                aria-labelledby="regimen-heading"
+                className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-5 sm:p-6"
               >
                 <h2
-                  id="unrecognized-heading"
-                  className="font-medium text-ink"
+                  id="regimen-heading"
+                  className="mb-2 text-2xl font-bold text-blue-950"
                 >
-                  We couldn&apos;t find these
+                  Whole-regimen risk summary
                 </h2>
-                <p className="mt-1 text-sm text-muted">
-                  These weren&apos;t matched to a known medication, so they
-                  weren&apos;t checked. Try a different spelling or the generic
-                  name.
+                <p className="whitespace-pre-line text-lg leading-relaxed text-blue-950">
+                  {result.regimenSummary}
                 </p>
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {result.unrecognized.map((name) => (
-                    <li
-                      key={name}
-                      className="rounded-md border border-line bg-surface-2 px-3 py-1 text-sm text-body"
-                    >
-                      {name}
-                    </li>
-                  ))}
-                </ul>
+                {result.recognized.length > 0 && (
+                  <p className="mt-4 text-sm text-blue-800">
+                    Recognized:{" "}
+                    {Array.from(
+                      new Set(
+                        result.recognized.map((r) => titleCase(r.standardName))
+                      )
+                    ).join(", ")}
+                  </p>
+                )}
               </section>
-            )}
 
-            {/* Illustrative daily schedule */}
-            {recognizedNames.length > 0 && (
-              <section aria-labelledby="schedule-heading">
-                <h2
-                  id="schedule-heading"
-                  className="font-heading text-xl font-semibold text-ink"
+              {/* Export PDF for the doctor */}
+              <button
+                type="button"
+                onClick={downloadPdf}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-indigo-300 bg-white px-6 py-3.5 text-lg font-semibold text-indigo-800 transition hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              >
+                📄 Export PDF for my doctor
+              </button>
+
+              {/* Interaction cards grouped by severity */}
+              {grouped.length > 0 && (
+                <section aria-labelledby="interactions-heading">
+                  <h2
+                    id="interactions-heading"
+                    className="mb-4 text-2xl font-bold"
+                  >
+                    Interactions found ({result.interactions.length})
+                  </h2>
+                  <div className="space-y-6">
+                    {grouped.map((group) => {
+                      const styles = SEVERITY_STYLES[group.severity];
+                      return (
+                        <div key={group.severity}>
+                          <h3
+                            className={`mb-3 text-xl font-bold ${styles.heading}`}
+                          >
+                            {group.severity} ({group.items.length})
+                          </h3>
+                          <ul className="space-y-3">
+                            {group.items.map((it, idx) => (
+                              <li
+                                key={`${it.drugAName}-${it.drugBName}-${idx}`}
+                                className={`rounded-2xl border-2 p-4 sm:p-5 ${styles.card}`}
+                              >
+                                <div className="mb-2 flex flex-wrap items-center gap-2">
+                                  <span className="text-lg font-bold text-gray-900">
+                                    {displayDrug(it.drugAName, it.rxcuiA)} +{" "}
+                                    {displayDrug(it.drugBName, it.rxcuiB)}
+                                  </span>
+                                  <span
+                                    className={`rounded-full px-3 py-0.5 text-sm font-semibold ${styles.badge}`}
+                                  >
+                                    {it.severity}
+                                  </span>
+                                </div>
+                                <p className="text-lg leading-relaxed text-gray-800">
+                                  {it.explanation}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+
+              {/* No interactions found */}
+              {noInteractions && (
+                <section className="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-5 text-lg text-emerald-900">
+                  No known interactions were found between these medications in
+                  our data source. This does not guarantee they are safe
+                  together — always confirm with your doctor or pharmacist.
+                </section>
+              )}
+
+              {/* Unrecognized drugs */}
+              {result.unrecognized.length > 0 && (
+                <section
+                  aria-labelledby="unrecognized-heading"
+                  className="rounded-2xl border border-gray-300 bg-gray-50 p-5"
                 >
-                  Daily schedule
-                </h2>
-                <p className="mt-1 text-sm text-muted">
-                  Illustrative timing only — a rough guide, not a prescription.
-                  Follow your doctor&apos;s or pharmacist&apos;s instructions.
-                </p>
-                <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {TIME_SLOTS.map((slot) => (
-                    <div
-                      key={slot}
-                      className="rounded-md border border-line bg-surface p-4 shadow-card"
-                    >
-                      <div className="flex items-baseline justify-between border-b border-line pb-2">
-                        <h3 className="text-sm font-semibold text-ink">
-                          {slot}
-                        </h3>
-                        <span className="text-xs text-muted">
-                          {SLOT_TIMES[slot]}
-                        </span>
+                  <h2
+                    id="unrecognized-heading"
+                    className="mb-2 text-xl font-bold text-gray-800"
+                  >
+                    We couldn&apos;t find these
+                  </h2>
+                  <p className="mb-3 text-base text-gray-600">
+                    We couldn&apos;t match the following to a known medication, so
+                    they weren&apos;t checked. Try a different spelling or the
+                    generic name.
+                  </p>
+                  <ul className="flex flex-wrap gap-2">
+                    {result.unrecognized.map((name) => (
+                      <li
+                        key={name}
+                        className="rounded-full border border-gray-300 bg-white px-4 py-1.5 text-base font-medium text-gray-700"
+                      >
+                        {name}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {/* Illustrative daily schedule */}
+              {recognizedNames.length > 0 && (
+                <section aria-labelledby="schedule-heading">
+                  <h2
+                    id="schedule-heading"
+                    className="mb-1 text-2xl font-bold"
+                  >
+                    Daily schedule
+                  </h2>
+                  <p className="mb-4 text-sm text-gray-500">
+                    Illustrative timing only — this is a rough guide, not a
+                    prescription. Follow your doctor&apos;s or pharmacist&apos;s
+                    instructions.
+                  </p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {TIME_SLOTS.map((slot) => (
+                      <div
+                        key={slot}
+                        className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
+                      >
+                        <div className="mb-2 flex items-baseline justify-between">
+                          <h3 className="text-lg font-bold text-gray-800">
+                            {slot}
+                          </h3>
+                          <span className="text-xs text-gray-500">
+                            {SLOT_TIMES[slot]}
+                          </span>
+                        </div>
+                        {schedule.bySlot[slot].length > 0 ? (
+                          <ul className="space-y-1.5">
+                            {schedule.bySlot[slot].map((name) => (
+                              <li
+                                key={name}
+                                className="rounded-lg bg-white px-3 py-1.5 text-base font-medium text-gray-800 shadow-sm"
+                              >
+                                {titleCase(name)}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-base text-gray-400">—</p>
+                        )}
                       </div>
-                      {schedule.bySlot[slot].length > 0 ? (
-                        <ul className="mt-3 space-y-1.5">
-                          {schedule.bySlot[slot].map((name) => (
-                            <li key={name} className="text-sm text-body">
-                              {titleCase(name)}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="mt-3 text-sm text-muted">—</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
-        )}
-      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+        </div>
 
-      {/* How it works */}
-      <section
-        aria-labelledby="how-heading"
-        className="mt-16 border-t border-line pt-10"
-      >
-        <h2
-          id="how-heading"
-          className="font-heading text-xl font-semibold text-ink"
+        {/* How it works */}
+        <section
+          aria-labelledby="how-heading"
+          className="mt-12 rounded-2xl border border-gray-200 bg-gray-50 p-5 sm:p-6"
         >
-          How it works
-        </h2>
-        <ol className="mt-6 grid gap-8 sm:grid-cols-3">
-          <li>
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Step 1
-            </div>
-            <h3 className="mt-2 font-medium text-ink">Add your medicines</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted">
-              Type each one, or upload a photo of the label and confirm what we
-              read.
-            </p>
-          </li>
-          <li>
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Step 2
-            </div>
-            <h3 className="mt-2 font-medium text-ink">We check every pair</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted">
-              Names are standardized via RxNorm, then each pair is looked up in a
-              real interaction database. We never invent interactions.
-            </p>
-          </li>
-          <li>
-            <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Step 3
-            </div>
-            <h3 className="mt-2 font-medium text-ink">You get a clear summary</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted">
-              Plain-language explanations, a whole-regimen overview, a daily
-              schedule, and a one-page PDF for your doctor.
-            </p>
-          </li>
-        </ol>
-      </section>
-    </main>
+          <h2 id="how-heading" className="mb-4 text-2xl font-bold">
+            How it works
+          </h2>
+          <ol className="space-y-4">
+            <li className="flex gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-blue-600 font-bold text-white"
+              >
+                1
+              </span>
+              <p className="text-base text-gray-700">
+                <span className="font-semibold">Add your medicines</span> — type
+                each one, or snap a photo of the label and we&apos;ll read the
+                name for you to confirm.
+              </p>
+            </li>
+            <li className="flex gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-blue-600 font-bold text-white"
+              >
+                2
+              </span>
+              <p className="text-base text-gray-700">
+                <span className="font-semibold">We check every pair</span> — drug
+                names are standardized via RxNorm, then each pair is looked up in
+                a real interaction database (DDInter 2.0). We never invent
+                interactions.
+              </p>
+            </li>
+            <li className="flex gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-blue-600 font-bold text-white"
+              >
+                3
+              </span>
+              <p className="text-base text-gray-700">
+                <span className="font-semibold">You get a clear summary</span> —
+                plain-language explanations, a whole-regimen overview, an
+                illustrative daily schedule, and a one-page PDF to share with your
+                doctor.
+              </p>
+            </li>
+          </ol>
+        </section>
+      </main>
   );
 }
