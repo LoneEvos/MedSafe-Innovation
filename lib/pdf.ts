@@ -164,11 +164,21 @@ export function exportRegimenPdf(input: PdfInput): void {
     { size: 8.5, color: [130, 130, 130] }
   );
 
-  // Open the PDF in a new tab so the user gets the browser's built-in viewer
-  // (read / print / save). Fall back to the same tab if the popup is blocked
-  // (common on mobile). Revoke the URL after a delay so the tab has time to load.
+  // Show the PDF in a new tab for reading / printing / saving — never a forced
+  // download. Embedding the blob in an <iframe> viewer previews reliably, whereas
+  // navigating straight to a blob: PDF URL downloads in some browsers/settings.
   const url = URL.createObjectURL(doc.output("blob"));
-  const win = window.open(url, "_blank");
-  if (!win) window.location.href = url;
+  const win = window.open();
+  if (win) {
+    win.document.write(
+      `<!doctype html><title>MedSafe — Medication Summary</title>` +
+        `<body style="margin:0"><iframe src="${url}" style="border:0;width:100vw;height:100vh"></iframe>`
+    );
+    win.document.close();
+  } else {
+    // Popup blocked (common on mobile) — open the PDF in the current tab.
+    window.location.href = url;
+  }
+  // Revoke after the viewer has loaded it, to avoid leaking the object URL.
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
