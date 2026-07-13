@@ -95,7 +95,10 @@ export default function Home() {
   const [result, setResult] = useState<CheckResponse | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanNote, setScanNote] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Two native file inputs feeding the same scan flow: one opens the rear
+  // camera on mobile (capture="environment"), one opens the file picker.
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   function addMed(e?: FormEvent) {
     e?.preventDefault();
@@ -294,24 +297,68 @@ export default function Home() {
             </button>
           </form>
 
-          {/* Photo scan — enhancement layered on top of the text input */}
+          {/* Photo scan — enhancement layered on top of the text input.
+              Two native inputs, same /api/scan flow: camera capture vs file pick. */}
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <span className="text-sm text-gray-500">or</span>
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => cameraInputRef.current?.click()}
               disabled={scanning}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-blue-300 bg-white px-4 py-2.5 text-base font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-blue-300 bg-white px-4 py-2.5 text-base font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {scanning ? "Reading label…" : "📷 Scan a label photo"}
+              <svg
+                aria-hidden="true"
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                <path d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+              </svg>
+              {scanning ? "Reading label…" : "Take a photo"}
             </button>
+            <button
+              type="button"
+              onClick={() => uploadInputRef.current?.click()}
+              disabled={scanning}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-blue-300 bg-white px-4 py-2.5 text-base font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <svg
+                aria-hidden="true"
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              {scanning ? "Reading label…" : "Upload a photo"}
+            </button>
+            {/* Rear camera on mobile */}
             <input
-              ref={fileInputRef}
+              ref={cameraInputRef}
               type="file"
               accept="image/*"
               capture="environment"
               onChange={onFileSelected}
-              aria-label="Upload a photo of a medication label"
+              aria-label="Take a photo of a medication label with your camera"
+              className="sr-only"
+            />
+            {/* Existing image / desktop file picker — no capture attribute */}
+            <input
+              ref={uploadInputRef}
+              type="file"
+              accept="image/*"
+              onChange={onFileSelected}
+              aria-label="Upload an existing photo of a medication label"
               className="sr-only"
             />
           </div>
