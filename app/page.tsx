@@ -245,9 +245,9 @@ export default function Home() {
   }
 
   const btnPrimary =
-    "rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-50";
+    "cursor-pointer rounded-md bg-cta px-5 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-cta-strong disabled:cursor-not-allowed disabled:opacity-50";
   const btnGhost =
-    "rounded-md border border-line bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
+    "cursor-pointer rounded-md border border-line bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors duration-200 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <main
@@ -345,7 +345,7 @@ export default function Home() {
                     type="button"
                     onClick={() => removeMed(med)}
                     aria-label={`Remove ${med}`}
-                    className="flex h-5 w-5 items-center justify-center rounded text-primary-strong/70 transition-colors hover:bg-primary/15 hover:text-primary-strong"
+                    className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-primary-strong/70 transition-colors duration-200 hover:bg-primary/15 hover:text-primary-strong"
                   >
                     <span aria-hidden="true" className="text-base leading-none">
                       ×
@@ -373,7 +373,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={loadExample}
-                className="font-medium text-primary underline underline-offset-2 hover:text-primary-strong"
+                className="cursor-pointer font-medium text-primary underline underline-offset-2 hover:text-primary-strong"
               >
                 try an example
               </button>{" "}

@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Inter, Source_Serif_4 } from "next/font/google";
+import { Figtree, Noto_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+// ui-ux-pro-max healthcare pairing: Figtree (headings) + Noto Sans (body).
+const body = Noto_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-body",
+  weight: ["400", "500", "700"],
   display: "swap",
 });
-const heading = Source_Serif_4({
+const heading = Figtree({
   subsets: ["latin"],
   variable: "--font-heading",
   weight: ["500", "600", "700"],
@@ -55,7 +57,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${heading.variable}`}>
+    <html lang="en" className={`${body.variable} ${heading.variable}`}>
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <a
           href="#main-content"

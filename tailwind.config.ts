@@ -12,6 +12,8 @@ const config: Config = {
         primary: "var(--primary)",
         "primary-strong": "var(--primary-strong)",
         "primary-tint": "var(--primary-tint)",
+        cta: "var(--cta)",
+        "cta-strong": "var(--cta-strong)",
         accent: "var(--accent)",
         ink: "var(--ink)",
         body: "var(--text)",
@@ -27,8 +29,8 @@ const config: Config = {
         "sev-minor-bg": "var(--sev-minor-bg)",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        heading: ["var(--font-heading)", "Georgia", "serif"],
+        sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        heading: ["var(--font-heading)", "system-ui", "sans-serif"],
       },
       boxShadow: {
         card: "0 1px 2px rgba(23, 41, 59, 0.04), 0 1px 3px rgba(23, 41, 59, 0.06)",

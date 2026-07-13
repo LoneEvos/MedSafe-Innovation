@@ -3,19 +3,22 @@
 @tailwind utilities;
 
 :root {
-  /* Brand: muted medical teal + deep slate ink */
-  --primary: #12716c;
-  --primary-strong: #0c5450;
-  --primary-tint: #e9f2f1;
+  /* Medical teal brand + health-green primary action (ui-ux-pro-max healthcare
+     palette, shifted to accessible shades so text/fills clear 4.5:1). */
+  --primary: #0e7490; /* medical teal */
+  --primary-strong: #155e75;
+  --primary-tint: #e2f5f8;
+  --cta: #15803d; /* health green — accessible vs skill's #22C55E */
+  --cta-strong: #166534;
   --accent: #2f6f9f;
 
-  /* Neutrals */
-  --ink: #17293b; /* headings, strong text */
-  --text: #33414f; /* body */
-  --muted: #66757f; /* secondary text */
-  --border: #dee3e7; /* hairlines */
+  /* Neutrals (deep teal ink) */
+  --ink: #134e4a; /* headings, strong text */
+  --text: #2f4442; /* body */
+  --muted: #5b6f6b; /* secondary text (>=4.5:1 on white) */
+  --border: #d3e3e0; /* hairlines */
   --surface: #ffffff; /* cards */
-  --surface-2: #f5f7f8; /* app background */
+  --surface-2: #f1fbf9; /* app background (soft teal tint) */
 
   /* Severity — refined, not neon */
   --sev-major: #b3261e;
@@ -25,7 +28,7 @@
   --sev-minor: #55606b;
   --sev-minor-bg: #eef1f3;
 
-  --focus: #2f6f9f;
+  --focus: #0e7490;
 }
 
 body {
@@ -47,8 +50,20 @@ h4 {
   border-color: var(--border);
 }
 
-/* One consistent, visible keyboard focus ring everywhere */
+/* One consistent, visible keyboard focus ring everywhere (3px per a11y guide) */
 :where(a, button, input, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
