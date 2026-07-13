@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
 
@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   title: "MedSafe — Drug interaction checker",
   description:
     "Educational tool that checks a medication list for drug–drug interactions, builds a daily schedule, and exports a PDF for your doctor. Not medical advice.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -26,25 +31,25 @@ export default function RootLayout({
 
         {/* Primary navigation */}
         <nav aria-label="Primary" className="border-b border-gray-200 bg-white">
-          <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-1">
             <Link
               href="/"
-              className="text-lg font-extrabold tracking-tight text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="inline-flex min-h-[44px] items-center rounded text-lg font-extrabold tracking-tight text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
             >
               ⚕️ MedSafe
             </Link>
-            <div className="flex gap-4 text-sm font-semibold">
+            <div className="flex items-center gap-1 text-sm font-semibold sm:gap-2">
               <Link
                 href="/"
-                className="rounded px-1 text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className="inline-flex min-h-[44px] items-center rounded px-2 text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
               >
                 Home
               </Link>
               <Link
                 href="/about"
-                className="rounded px-1 text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className="inline-flex min-h-[44px] items-center rounded px-2 text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
               >
-                About / Safety
+                About
               </Link>
             </div>
           </div>

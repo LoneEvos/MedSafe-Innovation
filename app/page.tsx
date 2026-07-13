@@ -253,10 +253,10 @@ export default function Home() {
       className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-10"
     >
       <header className="mb-8 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
             MedSafe
           </h1>
-          <p className="mt-3 text-lg font-semibold text-gray-800 sm:text-xl">
+          <p className="mt-3 text-base font-semibold text-gray-800 sm:text-lg">
             Catch dangerous drug interactions before they catch you.
           </p>
         </header>
@@ -291,7 +291,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={!input.trim()}
-              className="rounded-xl bg-blue-600 px-6 py-3 text-lg font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:bg-gray-300"
+              className="min-h-[44px] rounded-xl bg-blue-600 px-6 py-3 text-lg font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               Add
             </button>
@@ -299,13 +299,13 @@ export default function Home() {
 
           {/* Photo scan — enhancement layered on top of the text input.
               Two native inputs, same /api/scan flow: camera capture vs file pick. */}
-          <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <span className="text-sm text-gray-500">or</span>
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}
               disabled={scanning}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-blue-300 bg-white px-4 py-2.5 text-base font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-blue-300 bg-white px-4 py-2.5 text-base font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:justify-start"
             >
               <svg
                 aria-hidden="true"
@@ -326,7 +326,7 @@ export default function Home() {
               type="button"
               onClick={() => uploadInputRef.current?.click()}
               disabled={scanning}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-blue-300 bg-white px-4 py-2.5 text-base font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-blue-300 bg-white px-4 py-2.5 text-base font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:justify-start"
             >
               <svg
                 aria-hidden="true"
@@ -373,20 +373,21 @@ export default function Home() {
 
           {/* Med chips */}
           {meds.length > 0 && (
-            <ul className="mt-4 flex flex-wrap gap-2" aria-label="Your medications">
+            <ul
+              className="mt-4 flex flex-wrap gap-2.5"
+              aria-label="Your medications"
+            >
               {meds.map((med) => (
                 <li key={med}>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 py-1.5 pl-4 pr-1.5 text-base font-medium text-blue-900">
-                    {med}
+                  <span className="inline-flex min-h-[44px] items-center gap-1 rounded-full border border-blue-200 bg-blue-50 py-1 pl-4 pr-1 text-base font-medium text-blue-900">
+                    <span className="break-words">{med}</span>
                     <button
                       type="button"
                       onClick={() => removeMed(med)}
                       aria-label={`Remove ${med}`}
-                      className="flex h-6 w-6 items-center justify-center rounded-full text-blue-700 transition hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-2xl leading-none text-blue-700 transition hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     >
-                      <span aria-hidden="true" className="text-lg leading-none">
-                        ×
-                      </span>
+                      <span aria-hidden="true">×</span>
                     </button>
                   </span>
                 </li>
@@ -438,11 +439,11 @@ export default function Home() {
               >
                 <h2
                   id="regimen-heading"
-                  className="mb-2 text-2xl font-bold text-blue-950"
+                  className="mb-2 text-xl font-bold text-blue-950 sm:text-2xl"
                 >
                   Whole-regimen risk summary
                 </h2>
-                <p className="whitespace-pre-line text-lg leading-relaxed text-blue-950">
+                <p className="whitespace-pre-line text-base leading-relaxed text-blue-950 sm:text-lg">
                   {result.regimenSummary}
                 </p>
                 {result.recognized.length > 0 && (
@@ -471,7 +472,7 @@ export default function Home() {
                 <section aria-labelledby="interactions-heading">
                   <h2
                     id="interactions-heading"
-                    className="mb-4 text-2xl font-bold"
+                    className="mb-4 text-xl font-bold sm:text-2xl"
                   >
                     Interactions found ({result.interactions.length})
                   </h2>
@@ -492,17 +493,17 @@ export default function Home() {
                                 className={`rounded-2xl border-2 p-4 sm:p-5 ${styles.card}`}
                               >
                                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                                  <span className="text-lg font-bold text-gray-900">
+                                  <span className="break-words text-base font-bold text-gray-900 sm:text-lg">
                                     {displayDrug(it.drugAName, it.rxcuiA)} +{" "}
                                     {displayDrug(it.drugBName, it.rxcuiB)}
                                   </span>
                                   <span
-                                    className={`rounded-full px-3 py-0.5 text-sm font-semibold ${styles.badge}`}
+                                    className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${styles.badge}`}
                                   >
                                     {it.severity}
                                   </span>
                                 </div>
-                                <p className="text-lg leading-relaxed text-gray-800">
+                                <p className="text-base leading-relaxed text-gray-800 sm:text-lg">
                                   {it.explanation}
                                 </p>
                               </li>
@@ -559,7 +560,7 @@ export default function Home() {
                 <section aria-labelledby="schedule-heading">
                   <h2
                     id="schedule-heading"
-                    className="mb-1 text-2xl font-bold"
+                    className="mb-1 text-xl font-bold sm:text-2xl"
                   >
                     Daily schedule
                   </h2>
@@ -610,10 +611,10 @@ export default function Home() {
           aria-labelledby="how-heading"
           className="mt-12 rounded-2xl border border-gray-200 bg-gray-50 p-5 sm:p-6"
         >
-          <h2 id="how-heading" className="mb-4 text-2xl font-bold">
+          <h2 id="how-heading" className="mb-4 text-xl font-bold sm:text-2xl">
             How it works
           </h2>
-          <ol className="space-y-4">
+          <ol className="grid gap-5 sm:grid-cols-3 sm:gap-6">
             <li className="flex gap-3">
               <span
                 aria-hidden="true"

@@ -13,7 +13,9 @@ export default function AboutPage() {
       id="main-content"
       className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-10"
     >
-      <h1 className="text-4xl font-extrabold tracking-tight">About &amp; Safety</h1>
+      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+        About &amp; Safety
+      </h1>
 
       {/* Not-a-diagnosis limitation — front and center */}
       <section
@@ -38,7 +40,7 @@ export default function AboutPage() {
 
       {/* How it works */}
       <section aria-labelledby="how-heading" className="mt-8">
-        <h2 id="how-heading" className="text-2xl font-bold">
+        <h2 id="how-heading" className="text-xl font-bold sm:text-2xl">
           How it works
         </h2>
         <ol className="mt-3 list-decimal space-y-2 pl-6 text-lg text-gray-700">
@@ -64,7 +66,7 @@ export default function AboutPage() {
 
       {/* Data sources */}
       <section aria-labelledby="sources-heading" className="mt-8">
-        <h2 id="sources-heading" className="text-2xl font-bold">
+        <h2 id="sources-heading" className="text-xl font-bold sm:text-2xl">
           Data sources
         </h2>
         <dl className="mt-3 space-y-4 text-gray-700">
@@ -113,7 +115,7 @@ export default function AboutPage() {
 
       {/* Limitations */}
       <section aria-labelledby="limits-heading" className="mt-8">
-        <h2 id="limits-heading" className="text-2xl font-bold">
+        <h2 id="limits-heading" className="text-xl font-bold sm:text-2xl">
           Limitations
         </h2>
         <ul className="mt-3 list-disc space-y-2 pl-6 text-base text-gray-700">
@@ -139,7 +141,7 @@ export default function AboutPage() {
       <p className="mt-10">
         <Link
           href="/"
-          className="inline-block rounded-xl bg-blue-600 px-6 py-3 text-lg font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          className="inline-flex min-h-[44px] items-center rounded-xl bg-blue-600 px-6 py-3 text-lg font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
         >
           ← Back to the checker
         </Link>
