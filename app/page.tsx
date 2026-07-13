@@ -3,6 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { buildSchedule, TIME_SLOTS, SLOT_TIMES } from "@/lib/schedule";
 import { exportRegimenPdf } from "@/lib/pdf";
+import { displayName, titleCase } from "@/lib/displayName";
 
 type Severity = "Major" | "Moderate" | "Minor";
 
@@ -53,10 +54,6 @@ const SEVERITY_STYLES: Record<
     heading: "text-gray-800",
   },
 };
-
-function titleCase(s: string): string {
-  return s.length ? s[0].toUpperCase() + s.slice(1) : s;
-}
 
 // Downscale a label photo before upload. Phone photos can be several MB, which
 // exceeds Vercel's serverless request-body limit (~4.5 MB) and slows the scan.
@@ -213,6 +210,17 @@ export default function Home() {
   const recognizedNames = result?.recognized.map((r) => r.standardName) ?? [];
   const schedule = buildSchedule(recognizedNames);
 
+  // Canonical (lowercase) name -> "Entered (canonical)" display string. Used to
+  // render entered names on the schedule (which is keyed by canonical name) and
+  // to pass the mapping to the PDF.
+  const displayByName: Record<string, string> = {};
+  for (const r of result?.recognized ?? []) {
+    displayByName[r.standardName.toLowerCase()] = displayName(
+      r.input,
+      r.standardName
+    );
+  }
+
   function loadExample() {
     const example = ["warfarin", "aspirin", "ibuprofen"];
     setMeds(example);
@@ -223,28 +231,32 @@ export default function Home() {
     if (!result) return;
     exportRegimenPdf({
       meds,
-      recognized: Array.from(new Set(recognizedNames)),
+      recognized: Array.from(
+        new Set(
+          result.recognized.map((r) => displayName(r.input, r.standardName))
+        )
+      ),
       unrecognized: result.unrecognized,
       interactions: result.interactions.map((i) => ({
-        drugAName: i.drugAName,
-        drugBName: i.drugBName,
+        drugA: displayDrug(i.drugAName, i.rxcuiA),
+        drugB: displayDrug(i.drugBName, i.rxcuiB),
         severity: i.severity,
         explanation: i.explanation,
       })),
       regimenSummary: result.regimenSummary,
       schedule,
+      displayByName,
     });
   }
 
-  // Show the term the user actually entered (matched by RxCUI), annotating the
-  // DB's canonical name when it differs (e.g. "Aspirin (acetylsalicylic acid)").
+  // Show the term the user actually entered (matched by RxCUI, falling back to
+  // the canonical name), annotating the DB's canonical name when it differs
+  // (e.g. "Aspirin (acetylsalicylic acid)"). Delegates formatting to displayName.
   function displayDrug(dbName: string, rxcui: string | null): string {
     const input = result?.recognized.find(
       (r) => (rxcui && r.rxcui === rxcui) || r.standardName === dbName.toLowerCase()
     )?.input;
-    if (!input) return titleCase(dbName);
-    if (input.toLowerCase() === dbName.toLowerCase()) return titleCase(input);
-    return `${titleCase(input)} (${dbName})`;
+    return displayName(input, dbName);
   }
 
   return (
@@ -451,7 +463,9 @@ export default function Home() {
                     Recognized:{" "}
                     {Array.from(
                       new Set(
-                        result.recognized.map((r) => titleCase(r.standardName))
+                        result.recognized.map((r) =>
+                          displayName(r.input, r.standardName)
+                        )
                       )
                     ).join(", ")}
                   </p>
@@ -590,7 +604,8 @@ export default function Home() {
                                 key={name}
                                 className="rounded-lg bg-white px-3 py-1.5 text-base font-medium text-gray-800 shadow-sm"
                               >
-                                {titleCase(name)}
+                                {displayByName[name.toLowerCase()] ??
+                                  titleCase(name)}
                               </li>
                             ))}
                           </ul>

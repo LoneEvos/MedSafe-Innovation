@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkInteractions } from "@/lib/interactions";
 import { explainInteractions, analyzeRegimen } from "@/lib/llm";
+import { displayName } from "@/lib/displayName";
 
 const DISCLAIMER =
   "Educational tool only — not medical advice. Always consult your doctor or pharmacist.";
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
   const [explanations, regimenSummary] = await Promise.all([
     explainInteractions(result.interactions),
     analyzeRegimen(
-      result.recognized.map((r) => r.standardName),
+      result.recognized.map((r) => displayName(r.input, r.standardName)),
       result.interactions
     ),
   ]);

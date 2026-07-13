@@ -9,16 +9,18 @@ export type PdfSeverity = "Major" | "Moderate" | "Minor";
 
 export type PdfInput = {
   meds: string[]; // raw entered medications
-  recognized: string[]; // normalized standard names
+  recognized: string[]; // pre-formatted "Entered (canonical)" display strings
   unrecognized: string[];
   interactions: {
-    drugAName: string;
-    drugBName: string;
+    drugA: string; // pre-formatted "Entered (canonical)" display string
+    drugB: string; // pre-formatted "Entered (canonical)" display string
     severity: PdfSeverity;
     explanation: string;
   }[];
   regimenSummary: string;
-  schedule: Schedule;
+  schedule: Schedule; // slots keyed by canonical name
+  // Maps a canonical (lowercase) schedule name to its display string.
+  displayByName: Record<string, string>;
 };
 
 const SEVERITY_COLOR: Record<PdfSeverity, [number, number, number]> = {
@@ -98,7 +100,7 @@ export function exportRegimenPdf(input: PdfInput): void {
     body("None entered.");
   }
   if (input.recognized.length > 0) {
-    body(`Recognized as: ${input.recognized.map(titleCase).join(", ")}`, {
+    body(`Recognized as: ${input.recognized.join(", ")}`, {
       size: 9.5,
       color: [90, 90, 90],
     });
@@ -123,9 +125,7 @@ export function exportRegimenPdf(input: PdfInput): void {
       doc.setFontSize(10.5);
       doc.setTextColor(...SEVERITY_COLOR[it.severity]);
       doc.text(
-        `[${it.severity}] ${titleCase(it.drugAName)} + ${titleCase(
-          it.drugBName
-        )}`,
+        `[${it.severity}] ${it.drugA} + ${it.drugB}`,
         margin,
         y
       );
@@ -151,7 +151,10 @@ export function exportRegimenPdf(input: PdfInput): void {
     const meds = input.schedule.bySlot[slot];
     if (meds.length === 0) continue;
     anySlot = true;
-    body(`${slot} (${SLOT_TIMES[slot]}): ${meds.map(titleCase).join(", ")}`, {
+    const names = meds.map(
+      (m) => input.displayByName[m.toLowerCase()] ?? titleCase(m)
+    );
+    body(`${slot} (${SLOT_TIMES[slot]}): ${names.join(", ")}`, {
       size: 10.5,
     });
   }

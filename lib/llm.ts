@@ -133,6 +133,9 @@ function regimenFallback(): string {
   return `We couldn't generate an AI regimen summary right now. Please review your full medication list — and any flagged interactions above — with your doctor or pharmacist.`;
 }
 
+// `drugs` are display strings in the form "Entered (canonical)" — e.g.
+// "Paracetamol (acetaminophen)". The model is told to refer to each medication
+// by the name the patient entered, so the summary matches what the user typed.
 export async function analyzeRegimen(
   drugs: string[],
   dbHits: FoundInteraction[]
@@ -144,7 +147,7 @@ export async function analyzeRegimen(
       ? dbHits.map((h) => `- ${h.drugAName} + ${h.drugBName} (${h.severity})`).join("\n")
       : "None.";
 
-  const prompt = `You are a clinical-pharmacy educational assistant. A patient is taking these medications:
+  const prompt = `You are a clinical-pharmacy educational assistant. A patient is taking these medications (shown as "entered name (standard name)"):
 ${drugs.map((d) => `- ${d}`).join("\n")}
 
 A medical interaction database found these CONFIRMED pairwise interactions:
@@ -156,6 +159,7 @@ Write a short "whole-regimen awareness summary" (3 to 5 sentences, plain English
 - general timing considerations
 
 STRICT RULES:
+- When you mention a medication, refer to it by the name the patient entered — the text BEFORE any parenthesis (e.g. write "Paracetamol", not "acetaminophen").
 - Treat ONLY the confirmed database interactions listed above as established drug-drug interactions.
 - For anything else, frame it as GENERAL EDUCATIONAL AWARENESS using cautious language ("may", "can sometimes", "worth asking about"). Do NOT assert new specific interactions and do NOT diagnose.
 - This is not medical advice.
