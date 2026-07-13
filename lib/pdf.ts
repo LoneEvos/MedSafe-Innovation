@@ -164,6 +164,11 @@ export function exportRegimenPdf(input: PdfInput): void {
     { size: 8.5, color: [130, 130, 130] }
   );
 
-  const stamp = new Date().toISOString().slice(0, 10);
-  doc.save(`medsafe-summary-${stamp}.pdf`);
+  // Open the PDF in a new tab so the user gets the browser's built-in viewer
+  // (read / print / save). Fall back to the same tab if the popup is blocked
+  // (common on mobile). Revoke the URL after a delay so the tab has time to load.
+  const url = URL.createObjectURL(doc.output("blob"));
+  const win = window.open(url, "_blank");
+  if (!win) window.location.href = url;
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
