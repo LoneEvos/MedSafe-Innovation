@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { buildSchedule, TIME_SLOTS, SLOT_TIMES } from "@/lib/schedule";
 import { exportRegimenPdf } from "@/lib/pdf";
 import { displayName, titleCase } from "@/lib/displayName";
@@ -96,6 +96,38 @@ export default function Home() {
   // camera on mobile (capture="environment"), one opens the file picker.
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  // Remember the medications and results across navigation (e.g. visiting the
+  // About page and coming back) using sessionStorage, so the user doesn't lose
+  // their work. Restore once on mount; then persist on every change.
+  const persistReady = useRef(false);
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("medsafe:state");
+      if (saved) {
+        const parsed = JSON.parse(saved) as {
+          meds?: string[];
+          result?: CheckResponse | null;
+        };
+        if (Array.isArray(parsed.meds)) setMeds(parsed.meds);
+        if (parsed.result) setResult(parsed.result);
+      }
+    } catch {
+      // Ignore malformed/unavailable storage — just start fresh.
+    }
+  }, []);
+  useEffect(() => {
+    // Skip the very first run so restoring doesn't get clobbered by empty state.
+    if (!persistReady.current) {
+      persistReady.current = true;
+      return;
+    }
+    try {
+      sessionStorage.setItem("medsafe:state", JSON.stringify({ meds, result }));
+    } catch {
+      // Storage full or unavailable — non-fatal.
+    }
+  }, [meds, result]);
 
   function addMed(e?: FormEvent) {
     e?.preventDefault();

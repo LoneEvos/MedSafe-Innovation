@@ -64,7 +64,8 @@ export default function RootLayout({
           doctor or pharmacist.
         </div>
 
-        {children}
+        {/* Wrapper plays a gentle fade-up each time a page loads. */}
+        <div className="animate-fade-up">{children}</div>
 
         <footer className="mt-auto border-t border-gray-200 bg-gray-50">
           <div className="mx-auto max-w-3xl px-4 py-8 text-sm text-gray-500">
